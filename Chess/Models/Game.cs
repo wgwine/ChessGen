@@ -219,12 +219,7 @@ namespace Chess.Models
                 sb.Append(Util.ShortToFile(Util.GetXForPosition((byte)enPassantSquare.Value)));
                 sb.Append(Util.GetYForPosition((byte)enPassantSquare.Value)+1);
             }
-
-
-
-
             return sb.ToString();
-            return result;
         }
         public override string ToString()
         {
