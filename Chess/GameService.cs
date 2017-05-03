@@ -49,6 +49,16 @@ namespace Chess
 
     public static class Util
     {
+        static Dictionary<char, short> files = new Dictionary<char, short>() { { 'a', 0 }, { 'b', 1 }, { 'c', 2 }, { 'd', 3 }, { 'e', 4 }, { 'f', 5 }, { 'g', 6 }, { 'h', 7 } };
+        static char[] filesChar=new char[] { 'a','b','c','d','e','f','g','h'};
+        public static short FileToShort(char file)
+        {
+            return files[file];
+        }
+        public static char ShortToFile(short file)
+        {
+            return filesChar[file];
+        }
         public static byte GetYForPosition(byte position)
         {
             return (byte)(position >> 3);

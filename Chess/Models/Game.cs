@@ -14,6 +14,7 @@ namespace Chess.Models
         private bool _blackOOCastle = true;
         private bool _blackOOOCastle = true;
         private bool _whiteToMove = true;
+        private short? enPassantSquare;
         public List<short> Positions
         {
             get { return _positions; }
@@ -89,6 +90,7 @@ namespace Chess.Models
                         //if we see a number, that means n spots are empty in this row, skip over them
                         if (Char.IsNumber(row[x]))
                         {
+                            //-'0' char trick to offset ascii number
                             index += row[x] - '0';
                         }
                         else
@@ -126,6 +128,103 @@ namespace Chess.Models
                     _blackOOOCastle = false;
                 }
             }
+            if (fenParts.Length > 3 && fenParts[3][0] !='-')
+            {
+                //file + (8 * rank)
+                //ascii offset -'1' instead of -'0' because FEN is 1 indexed instead of 0 indexed
+                enPassantSquare = (short)(Util.FileToShort(fenParts[3][0]) + (8 * (fenParts[3][1]-'1')));
+            }
+        }
+        public string ToFENString()
+        {
+            string result = "";
+
+            string[] resultArr = new string[8 * 8];
+            foreach (short piece in _positions)
+            {
+                resultArr[Util.GetPieceOffset(piece)] = PieceTypeFENMap.PieceName(piece).ToString();
+            }
+            int count = 0;
+            StringBuilder sb = new StringBuilder();
+            //we have to re-reverse the result for text-box
+            int skipGrabber = 0;
+            foreach (string p in resultArr.Reverse())
+            {
+
+                if (p != null)
+                {
+                    if (skipGrabber != 0)
+                    {
+                        sb.Append(skipGrabber);
+                        skipGrabber = 0;
+                    }
+                    sb.Append(p);
+                }
+                else
+                {
+                    skipGrabber++;
+                }
+                
+                count++;
+                if (count % 8 == 0)
+                {
+                    if (skipGrabber != 0)
+                    {
+                        sb.Append(skipGrabber);
+                        skipGrabber = 0;
+                    }
+                    sb.Append("/");
+                }
+            }
+
+            //which player has next move
+            sb.Append(" ");
+            if (_whiteToMove)
+            {
+                sb.Append("w");
+            }
+            else
+            {
+                sb.Append("b");
+            }
+
+            //castling
+            sb.Append(" ");
+            if(_whiteOOCastle|| _whiteOOOCastle || _blackOOCastle || _blackOOOCastle)
+            {
+                if (_whiteOOCastle)
+                {
+                    sb.Append("K");
+                }
+                if (_whiteOOOCastle)
+                {
+                    sb.Append("Q");
+                }
+                if (_blackOOCastle)
+                {
+                    sb.Append("k");
+                }
+                if (_blackOOOCastle)
+                {
+                    sb.Append("q");
+                }
+            }else
+            {
+                sb.Append("-");
+            }
+
+            sb.Append(" ");
+            if (enPassantSquare.HasValue)
+            {
+                sb.Append(Util.ShortToFile(Util.GetXForPosition((byte)enPassantSquare.Value)));
+                sb.Append(Util.GetYForPosition((byte)enPassantSquare.Value)+1);
+            }
+
+
+
+
+            return sb.ToString();
+            return result;
         }
         public override string ToString()
         {
@@ -139,11 +238,11 @@ namespace Chess.Models
             //we have to re-reverse the result for text-box
             foreach (string p in resultArr.Reverse())
             {
-                sb.Append( p ?? "-");
+                sb.Append(p ?? "-");
                 count++;
-                if (count % 8==0)
+                if (count % 8 == 0)
                 {
-                    sb.Append( "\r\n");
+                    sb.Append("\r\n");
                 }
             }
             return sb.ToString();

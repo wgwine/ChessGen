@@ -52,17 +52,18 @@ namespace Chess
         {
             string value = textBox2.Text;
             Game g;
-            int howmany = 100000;
+            int howmany = 1000;
             Stopwatch w = new Stopwatch();
             w.Start();
             string s="";
             for (int i = 0; i < howmany; i++) {
                 g=new Game(value);
                 s = g.ToString();
+                s = g.ToFENString();
             }
             w.Stop();
 
-            textBox3.Text = w.ElapsedMilliseconds+"ms for "+ howmany+" parses";
+            textBox3.Text = w.ElapsedTicks+"ticks for "+ howmany+" parses";
             textBox3.Text += "\r\n" + s;
         }
 
