@@ -16,21 +16,6 @@ namespace Chess
             gs = new GameService();
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            Stopwatch w = new Stopwatch();
-            short value = (short)numericUpDown2.Value;
-            textBox1.Text = gs.GetPieceStringFromShort(value);
-
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            Stopwatch w = new Stopwatch();
-            string[] value = textBox1.Text.Split('-');
-
-            numericUpDown2.Value = gs.GetShortFromPieceString(textBox1.Text);
-        }
         public PieceType GetPieceType(short piece)
         {
             return (PieceType)ByteFromBoolArray(new bool[]{ CheckPosition(piece, 8), CheckPosition(piece, 7), CheckPosition(piece, 6) });
@@ -54,31 +39,34 @@ namespace Chess
         {
             string value = textBox2.Text;
             Game g;
-            int howmany = 100000;
+            int howmany = 1000;
             StringBuilder sb = new StringBuilder();
             Stopwatch w = new Stopwatch();
             w.Start();
             g = new Game(value);
             string s="";
-            for (int i = 0; i < howmany; i++) {
+            int count=0;
+            textBox3.Text = "";
 
-                Dictionary<short, List<short>> mov =g.GetMoves();
-                //foreach(KeyValuePair<short, List<short>> move in mov)
+            for (int i = 0; i < howmany; i++) {
+                Dictionary<short, List<short>> mov = g.GetMoves();
+
+                //foreach (KeyValuePair<short, List<short>> move in mov)
                 //{
-                //    foreach(short newMove in move.Value)
+                //    foreach (short newMove in move.Value)
                 //    {
+                //        count++;
                 //        g.Move(move.Key, newMove);
-                //        s = g.ToString();
-                //        sb.Append(s);
-                //        sb.Append("\r\n\r\n");
+
 
                 //        g.Undo();
                 //    }
-                //}                
+                //}
             }
             w.Stop();
 
-            textBox3.Text = w.ElapsedMilliseconds+"ms for "+ howmany+" parses";
+            textBox3.Text += w.ElapsedMilliseconds+"ms for "+ howmany+" rounds";
+
             textBox3.Text += sb.ToString();
         }
 

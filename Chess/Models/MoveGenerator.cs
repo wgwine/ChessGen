@@ -12,28 +12,28 @@ namespace Chess.Models
         {
 
         }
-        public List<short> GenerateMovesForPiece(short piece)
+        public List<short> GenerateMovesForPiece(short piece, List<short> board)
         {
             PieceType pt = Util.GetPieceType(piece);
             switch (pt)
             {
                 case PieceType.Pawn:
-                    return PawnMoveGenerator.PossiblePositions(piece);
+                    return PawnMoveGenerator.PossiblePositions(piece, board);
                 case PieceType.Night:
-                    return KnightMoveGenerator.PossiblePositions(piece);
+                    return KnightMoveGenerator.PossiblePositions(piece, board);
                 case PieceType.Bishop:
-                    return BishopMoveGenerator.PossiblePositions(piece);
+                    return BishopMoveGenerator.PossiblePositions(piece, board);
                 case PieceType.Rook:
-                    return RookMoveGenerator.PossiblePositions(piece);
+                    return RookMoveGenerator.PossiblePositions(piece, board);
                 case PieceType.Queen:
-                    return QueenMoveGenerator.PossiblePositions(piece);
+                    return QueenMoveGenerator.PossiblePositions(piece, board);
                 case PieceType.King:
-                    return KingMoveGenerator.PossiblePositions(piece);
+                    return KingMoveGenerator.PossiblePositions(piece, board);
                 default:
                     break;
 
             }
-            return PawnMoveGenerator.PossiblePositions(piece);
+            return new List<short>();
         }
     }
 }

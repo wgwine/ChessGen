@@ -5,7 +5,7 @@ namespace Chess.Models
 {
     public static class QueenMoveGenerator 
     {
-        public static List<short> PossiblePositions(short piece)
+        public static List<short> PossiblePositions(short piece, List<short> board)
         {
             List<short> result = new List<short>();
             short position = Util.GetPieceOffset(piece);
@@ -43,7 +43,7 @@ namespace Chess.Models
             R = (byte)Util.GetXForPosition(position);
             for (byte i = R; i <= (56 + R); i += 8)
             {
-                result.Add((short)(unpositionedPiece + i + R));
+                result.Add((short)(unpositionedPiece + i));
             }
             return result;
         }

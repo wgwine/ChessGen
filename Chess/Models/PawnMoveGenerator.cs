@@ -13,7 +13,7 @@ namespace Chess.Models
     }
     public static class PawnMoveGenerator
     {
-        public static List<short> PossiblePositions(short piece)
+        public static List<short> PossiblePositions(short piece, List<short> board)
         {
             List<short> result = new List<short>();
             short position = Util.GetPieceOffset(piece);

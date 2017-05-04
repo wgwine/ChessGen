@@ -140,14 +140,56 @@ namespace Chess.Models
         }
         public Dictionary<short, List<short>> GetMoves()
         {
-            List<short> moves = new List<short>();
+            short[,] board = new short[8, 8];
+            bool[,] whiteBoard = new bool[8, 8];
+            bool[,] blackBoard = new bool[8, 8];
+            short[,] occupationBoard = new short[8, 8];
+            foreach (short piece in _positions)
+            {
+                short x = Util.GetXForPiece(piece);
+                short y = Util.GetYForPiece(piece);
+                board[x, y] = piece;
+                whiteBoard[x, y] = Util.IsWhite(piece);
+                blackBoard[x, y] = !Util.IsWhite(piece);
+                if(whiteBoard[x, y])
+                {
+                    occupationBoard[x, y] = 1;
+                }
+                if (blackBoard[x, y])
+                {
+                    occupationBoard[x, y] = 2;
+                }
+
+            }
             Dictionary<short, List<short>> pieceMoveMap = new Dictionary<short, List<short>>();
             MoveGenerator mg = new MoveGenerator();
             foreach(short piece in _positions)
             {
-                pieceMoveMap.Add(piece, mg.GenerateMovesForPiece(piece));
+                List<short> moves = mg.GenerateMovesForPiece(piece, occupationBoard);
+                List<short> validMoves = new List<short>();
 
+                if (Util.IsWhite(piece))
+                {
+                    foreach (short move in moves) {
+                        if(!whiteBoard[Util.GetXForPiece(move), Util.GetYForPiece(move)])
+                        {
+                            validMoves.Add(move);
+                        }
+                    }
+                }
+                if (!Util.IsWhite(piece))
+                {
+                    foreach (short move in moves)
+                    {
+                        if (!blackBoard[Util.GetXForPiece(move), Util.GetYForPiece(move)])
+                        {
+                            validMoves.Add(move);
+                        }
+                    }
+                }
+                pieceMoveMap.Add(piece, validMoves);
             }
+
             return pieceMoveMap;
         }
 

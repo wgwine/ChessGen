@@ -50,7 +50,7 @@ namespace Chess
     public static class Util
     {
         static Dictionary<char, short> files = new Dictionary<char, short>() { { 'a', 0 }, { 'b', 1 }, { 'c', 2 }, { 'd', 3 }, { 'e', 4 }, { 'f', 5 }, { 'g', 6 }, { 'h', 7 } };
-        static char[] filesChar=new char[] { 'a','b','c','d','e','f','g','h'};
+        static char[] filesChar = new char[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' };
         public static short FileToShort(char file)
         {
             return files[file];
@@ -63,17 +63,25 @@ namespace Chess
         {
             return (short)(position >> 3);
         }
-
+        public static short GetYForPiece(short piece)
+        {
+            return (short)((piece & 63) >> 3);
+        }
         public static short GetXForPosition(short position)
         {
             return (short)(position & 7);
         }
-
+        public static short GetXForPiece(short piece)
+        {
+            return (short)((piece & 63) & 7);
+        }
         public static short GetPieceOffset(short piece)
         {
             return (short)(piece & 63);
         }
-
+        public static bool IsWhite(short piece) { 
+            return (piece & (1 << 9)) != 0;
+        }
         public static PieceType GetPieceType(short piece)
         {
             int a = piece % 512;
