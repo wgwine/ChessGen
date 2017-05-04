@@ -139,7 +139,8 @@
             this.textBox3.Location = new System.Drawing.Point(13, 246);
             this.textBox3.Multiline = true;
             this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(471, 321);
+            this.textBox3.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textBox3.Size = new System.Drawing.Size(987, 321);
             this.textBox3.TabIndex = 11;
             // 
             // Form1

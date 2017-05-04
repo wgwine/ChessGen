@@ -59,19 +59,19 @@ namespace Chess
         {
             return filesChar[file];
         }
-        public static byte GetYForPosition(byte position)
+        public static short GetYForPosition(short position)
         {
-            return (byte)(position >> 3);
+            return (short)(position >> 3);
         }
 
-        public static byte GetXForPosition(byte position)
+        public static short GetXForPosition(short position)
         {
-            return (byte)(position & 7);
+            return (short)(position & 7);
         }
 
-        public static byte GetPieceOffset(short piece)
+        public static short GetPieceOffset(short piece)
         {
-            return (byte)(piece & 63);
+            return (short)(piece & 63);
         }
 
         public static PieceType GetPieceType(short piece)

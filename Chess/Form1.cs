@@ -2,6 +2,8 @@
 using System.Windows.Forms;
 using System.Diagnostics;
 using Chess.Models;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Chess
 {
@@ -53,18 +55,31 @@ namespace Chess
             string value = textBox2.Text;
             Game g;
             int howmany = 100000;
+            StringBuilder sb = new StringBuilder();
             Stopwatch w = new Stopwatch();
             w.Start();
+            g = new Game(value);
             string s="";
             for (int i = 0; i < howmany; i++) {
-                g=new Game(value);
 
-                s = g.ToFENString();
+                Dictionary<short, List<short>> mov =g.GetMoves();
+                //foreach(KeyValuePair<short, List<short>> move in mov)
+                //{
+                //    foreach(short newMove in move.Value)
+                //    {
+                //        g.Move(move.Key, newMove);
+                //        s = g.ToString();
+                //        sb.Append(s);
+                //        sb.Append("\r\n\r\n");
+
+                //        g.Undo();
+                //    }
+                //}                
             }
             w.Stop();
 
             textBox3.Text = w.ElapsedMilliseconds+"ms for "+ howmany+" parses";
-            textBox3.Text += "\r\n" + s;
+            textBox3.Text += sb.ToString();
         }
 
     }

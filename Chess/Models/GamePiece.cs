@@ -10,7 +10,7 @@ namespace Chess.Models
     {
         short m_Piece;
         PieceType m_pieceType;
-        byte m_position;
+        short m_position;
         bool m_isWhite;
         public GamePiece()
         {
@@ -22,7 +22,7 @@ namespace Chess.Models
             m_position = Util.GetPieceOffset(piece);
             m_isWhite = Util.GetBitAtPosition(piece, 9);
         }
-        public byte Position
+        public short Position
         {
             get
             {

@@ -15,6 +15,7 @@ namespace Chess.Models
         private bool _blackOOOCastle = true;
         private bool _whiteToMove = true;
         private short? enPassantSquare;
+        private Stack<Tuple<short, short>> history;
         public List<short> Positions
         {
             get { return _positions; }
@@ -57,6 +58,7 @@ namespace Chess.Models
 
         public Game()
         {
+            history = new Stack<Tuple<short, short>>();
             _positions = new short[32]{
                 704,577,642,771,836,645,582,711,    //white royal
                 520,521,522,523,524,525,526,527,    //white pawns
@@ -66,6 +68,7 @@ namespace Chess.Models
         }
         public Game(string fen)
         {
+            history = new Stack<Tuple<short, short>>();
             //split the sections of the FEN string with spaces
             string[] fenParts = fen.Split(' ');
 
@@ -133,6 +136,38 @@ namespace Chess.Models
                 //file + (8 * rank)
                 //ascii offset -'1' instead of -'0' because FEN is 1 indexed instead of 0 indexed
                 enPassantSquare = (short)(Util.FileToShort(fenParts[3][0]) + (8 * (fenParts[3][1]-'1')));
+            }
+        }
+        public Dictionary<short, List<short>> GetMoves()
+        {
+            List<short> moves = new List<short>();
+            Dictionary<short, List<short>> pieceMoveMap = new Dictionary<short, List<short>>();
+            MoveGenerator mg = new MoveGenerator();
+            foreach(short piece in _positions)
+            {
+                pieceMoveMap.Add(piece, mg.GenerateMovesForPiece(piece));
+
+            }
+            return pieceMoveMap;
+        }
+
+
+        public void Move(short currentPiece, short newPiece)
+        {
+            if (_positions.Contains(currentPiece))
+            {
+                _positions.Remove(currentPiece);
+                _positions.Add(newPiece);
+                history.Push(new Tuple<short, short>(currentPiece, newPiece));
+            }
+        }
+        public void Undo()
+        {
+            Tuple<short,short> move=history.Pop();
+            if (_positions.Contains(move.Item2))
+            {
+                _positions.Remove(move.Item2);
+                _positions.Add(move.Item1);                
             }
         }
         public string ToFENString()
