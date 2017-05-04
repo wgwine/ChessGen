@@ -143,7 +143,7 @@ namespace Chess.Models
             short[,] board = new short[8, 8];
             bool[,] whiteBoard = new bool[8, 8];
             bool[,] blackBoard = new bool[8, 8];
-            short[,] occupationBoard = new short[8, 8];
+            short[] occupationBoard = new short[8 * 8];
             foreach (short piece in _positions)
             {
                 short x = Util.GetXForPiece(piece);
@@ -151,21 +151,28 @@ namespace Chess.Models
                 board[x, y] = piece;
                 whiteBoard[x, y] = Util.IsWhite(piece);
                 blackBoard[x, y] = !Util.IsWhite(piece);
-                if(whiteBoard[x, y])
-                {
-                    occupationBoard[x, y] = 1;
-                }
-                if (blackBoard[x, y])
-                {
-                    occupationBoard[x, y] = 2;
-                }
 
+
+            }
+            for(int x = 0; x < 8; x++)
+            {
+                for (int y = 0; y < 8; y++)
+                {
+                    if (whiteBoard[x, y])
+                    {
+                        occupationBoard[x +(8* y)] = 1;
+                    }
+                    if (blackBoard[x, y])
+                    {
+                        occupationBoard[x + (8 * y)] = 2;
+                    }
+                }
             }
             Dictionary<short, List<short>> pieceMoveMap = new Dictionary<short, List<short>>();
             MoveGenerator mg = new MoveGenerator();
             foreach(short piece in _positions)
             {
-                List<short> moves = mg.GenerateMovesForPiece(piece, occupationBoard);
+                List<short> moves = mg.GenerateMovesForPiece(piece, occupationBoard.ToList());
                 List<short> validMoves = new List<short>();
 
                 if (Util.IsWhite(piece))

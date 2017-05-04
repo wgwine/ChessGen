@@ -39,7 +39,7 @@ namespace Chess
         {
             string value = textBox2.Text;
             Game g;
-            int howmany = 1000;
+            int howmany = 1;
             StringBuilder sb = new StringBuilder();
             Stopwatch w = new Stopwatch();
             w.Start();
@@ -47,21 +47,23 @@ namespace Chess
             string s="";
             int count=0;
             textBox3.Text = "";
-
+            Dictionary<short, List<short>> mov = g.GetMoves();
             for (int i = 0; i < howmany; i++) {
-                Dictionary<short, List<short>> mov = g.GetMoves();
-
-                //foreach (KeyValuePair<short, List<short>> move in mov)
-                //{
-                //    foreach (short newMove in move.Value)
-                //    {
-                //        count++;
-                //        g.Move(move.Key, newMove);
 
 
-                //        g.Undo();
-                //    }
-                //}
+                foreach (KeyValuePair<short, List<short>> move in mov)
+                {
+                    foreach (short newMove in move.Value)
+                    {
+                        count++;
+                        g.Move(move.Key, newMove);
+                        s = g.ToString();
+                        sb.Append(s);
+                        sb.Append("\r\n\r\n");
+
+                        g.Undo();
+                    }
+                }
             }
             w.Stop();
 
