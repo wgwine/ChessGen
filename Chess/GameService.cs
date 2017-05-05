@@ -79,6 +79,7 @@ namespace Chess
         {
             return (short)(piece & 63);
         }
+
         public static bool IsWhite(short piece) { 
             return (piece & (1 << 9)) != 0;
         }
@@ -91,10 +92,16 @@ namespace Chess
 
         //first 3 bits are for piece type, but that is 8 values and we only have 6 pieces. Fill in the blanks with some character. 
         public static char[] PieceNames = new char[] { 'p', 'n', 'b', 'r', 'q', 'k','_','_', 'P', 'N', 'B', 'R', 'Q', 'K' };
+        public static Dictionary<char,short> PieceValues = new Dictionary<char, short> { {'p',-1},{ 'P', 1 }, { 'n', -3 }, { 'N', 3 }, { 'b', -3 }, { 'B', 3 }, { 'r', -5 }, { 'R', 5 }, { 'q', -9 }, { 'Q', 9 }, { 'k', 0 }, { 'K', 0 } };
+        public static short[] PieceValuesIndexed = new short[] { -1,-3,-3,-5,-9,0,0,0,1,3,3,5,9,0};
         public static char GetPieceName(short piece)
         {
             //offset the position bits from the piece, and use the lookup array. 3 bits for type, and the 4th bit is color. 
             return PieceNames[(piece >> 6)];
+        }
+        public static short GetPieceValue(short piece)
+        {
+            return PieceValuesIndexed[(piece >> 6)];
         }
         public static bool GetBitAtPosition(short piece, byte pos)
         {

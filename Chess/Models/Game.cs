@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,7 @@ namespace Chess.Models
         private bool _blackOOOCastle = true;
         private bool _whiteToMove = true;
         private short? enPassantSquare;
-        private Stack<Tuple<short, short>> history;
+        private Stack<Tuple<short, short, short>> history;
         public List<short> Positions
         {
             get { return _positions; }
@@ -58,7 +59,7 @@ namespace Chess.Models
 
         public Game()
         {
-            history = new Stack<Tuple<short, short>>();
+            history = new Stack<Tuple<short, short,short>>();
             _positions = new short[32]{
                 704,577,642,771,836,645,582,711,    //white royal
                 520,521,522,523,524,525,526,527,    //white pawns
@@ -68,9 +69,9 @@ namespace Chess.Models
         }
         public Game(string fen)
         {
-            history = new Stack<Tuple<short, short>>();
+            history = new Stack<Tuple<short, short, short>>();
             //split the sections of the FEN string with spaces
-            string[] fenParts = fen.Split(' ');
+            string[] fenParts = fen.Trim().Split(' ');
 
             //first part is for piece positions
             if (fenParts.Length > 0)
@@ -79,7 +80,7 @@ namespace Chess.Models
                 int index = 0;
                 //rows are delimited by /
                 //Row order reversed because the convention I am using is bottom-left=0,0, but FEN starts with rank 8 for some stupid reason
-                string[] positionRows = fenParts[0].Split('/').Reverse().ToArray();
+                string[] positionRows = fenParts[0].Trim().Split('/').Reverse().ToArray();
                 for (int y = 0; y < 8; y++)
                 {
                     string row = positionRows[y];
@@ -131,14 +132,14 @@ namespace Chess.Models
                     _blackOOOCastle = false;
                 }
             }
-            if (fenParts.Length > 3 && fenParts[3][0] !='-')
+            if (fenParts.Length > 3 && fenParts[3][0] != '-')
             {
                 //file + (8 * rank)
                 //ascii offset -'1' instead of -'0' because FEN is 1 indexed instead of 0 indexed
-                enPassantSquare = (short)(Util.FileToShort(fenParts[3][0]) + (8 * (fenParts[3][1]-'1')));
+                enPassantSquare = (short)(Util.FileToShort(fenParts[3][0]) + (8 * (fenParts[3][1] - '1')));
             }
         }
-        public Dictionary<short, List<short>> GetMoves()
+        public IEnumerable<Tuple<short, List<short>>> GetMoves()
         {
             short[,] board = new short[8, 8];
             bool[,] whiteBoard = new bool[8, 8];
@@ -151,16 +152,14 @@ namespace Chess.Models
                 board[x, y] = piece;
                 whiteBoard[x, y] = Util.IsWhite(piece);
                 blackBoard[x, y] = !Util.IsWhite(piece);
-
-
             }
-            for(int x = 0; x < 8; x++)
+            for (int x = 0; x < 8; x++)
             {
                 for (int y = 0; y < 8; y++)
                 {
                     if (whiteBoard[x, y])
                     {
-                        occupationBoard[x +(8* y)] = 1;
+                        occupationBoard[x + (8 * y)] = 1;
                     }
                     if (blackBoard[x, y])
                     {
@@ -168,55 +167,65 @@ namespace Chess.Models
                     }
                 }
             }
-            Dictionary<short, List<short>> pieceMoveMap = new Dictionary<short, List<short>>();
-            MoveGenerator mg = new MoveGenerator();
-            foreach(short piece in _positions)
+            List<Tuple<short, List<short>>> returnVal=new List<Tuple<short, List<short>>>();
+            List<short> occupationList = occupationBoard.ToList();
+            //returnVal = (_positions.AsParallel().Select(piece => new Tuple<short, List<short>>(piece, MoveGenerator.GenerateMovesForPiece(piece, occupationList)))).ToList();
+            foreach (short piece in _positions)
             {
-                List<short> moves = mg.GenerateMovesForPiece(piece, occupationBoard.ToList());
-                List<short> validMoves = new List<short>();
-
-                if (Util.IsWhite(piece))
-                {
-                    foreach (short move in moves) {
-                        if(!whiteBoard[Util.GetXForPiece(move), Util.GetYForPiece(move)])
-                        {
-                            validMoves.Add(move);
-                        }
-                    }
-                }
-                if (!Util.IsWhite(piece))
-                {
-                    foreach (short move in moves)
-                    {
-                        if (!blackBoard[Util.GetXForPiece(move), Util.GetYForPiece(move)])
-                        {
-                            validMoves.Add(move);
-                        }
-                    }
-                }
-                pieceMoveMap.Add(piece, validMoves);
+                if((_whiteToMove&&Util.IsWhite(piece)) || (!_whiteToMove && !Util.IsWhite(piece)))
+                returnVal.Add(new Tuple<short, List<short>>(piece, MoveGenerator.GenerateMovesForPiece(piece, occupationList)));                    
             }
-
-            return pieceMoveMap;
+            return returnVal;
         }
-
+        public short BoardValue()
+        {
+            short value = 0;
+            foreach (short piece in _positions)
+            {
+                value += Util.GetPieceValue(piece);
+            }
+            return value;
+        }
 
         public void Move(short currentPiece, short newPiece)
         {
             if (_positions.Contains(currentPiece))
             {
+                short newOffset= Util.GetPieceOffset(newPiece);
+                short capturedPiece=-1;
+                foreach (short piece in _positions)
+                {
+                    short offset = Util.GetPieceOffset(piece);
+                    if(newOffset==offset && Util.IsWhite(piece) != Util.IsWhite(currentPiece))
+                    {
+                        capturedPiece = piece;
+                    }
+                }
+                if (capturedPiece >= 0)
+                {
+                    _positions.Remove(capturedPiece);
+                }
+                _whiteToMove = !Util.IsWhite(currentPiece);
                 _positions.Remove(currentPiece);
                 _positions.Add(newPiece);
-                history.Push(new Tuple<short, short>(currentPiece, newPiece));
+                history.Push(new Tuple<short, short, short>(currentPiece, newPiece, capturedPiece));
             }
         }
         public void Undo()
         {
-            Tuple<short,short> move=history.Pop();
-            if (_positions.Contains(move.Item2))
+            if (history.Count > 0)
             {
-                _positions.Remove(move.Item2);
-                _positions.Add(move.Item1);                
+                Tuple<short, short, short> move = history.Pop();
+                if (_positions.Contains(move.Item2))
+                {
+                    _positions.Remove(move.Item2);
+                    _positions.Add(move.Item1);
+                    if (move.Item3 >= 0)
+                    {
+                        _positions.Add(move.Item3);
+                    }
+                    _whiteToMove = !Util.IsWhite(move.Item1);
+                }
             }
         }
         public string ToFENString()
@@ -234,7 +243,10 @@ namespace Chess.Models
             int skipGrabber = 0;
             foreach (string p in resultArr.Reverse())
             {
-
+                if (count % 8 == 0)
+                {
+                    sb.Append("/");
+                }
                 if (p != null)
                 {
                     if (skipGrabber != 0)
@@ -248,7 +260,7 @@ namespace Chess.Models
                 {
                     skipGrabber++;
                 }
-                
+
                 count++;
                 if (count % 8 == 0)
                 {
@@ -257,7 +269,6 @@ namespace Chess.Models
                         sb.Append(skipGrabber);
                         skipGrabber = 0;
                     }
-                    sb.Append("/");
                 }
             }
 
@@ -274,7 +285,7 @@ namespace Chess.Models
 
             //castling
             sb.Append(" ");
-            if(_whiteOOCastle|| _whiteOOOCastle || _blackOOCastle || _blackOOOCastle)
+            if (_whiteOOCastle || _whiteOOOCastle || _blackOOCastle || _blackOOOCastle)
             {
                 if (_whiteOOCastle)
                 {
@@ -292,36 +303,62 @@ namespace Chess.Models
                 {
                     sb.Append("q");
                 }
-            }else
+            }
+            else
             {
                 sb.Append("-");
             }
 
-            sb.Append(" ");
+            
             if (enPassantSquare.HasValue)
             {
+                sb.Append(" ");
                 sb.Append(Util.ShortToFile(Util.GetXForPosition((byte)enPassantSquare.Value)));
-                sb.Append(Util.GetYForPosition((byte)enPassantSquare.Value)+1);
+                sb.Append(Util.GetYForPosition((byte)enPassantSquare.Value) + 1);
+            }else
+            {
+                sb.Append(" -");
             }
             return sb.ToString();
         }
         public override string ToString()
         {
-            string[] resultArr = new string[8 * 8];
+            char[][] resultArr = new char[8][];
+            for (int i = 0; i < 8; i++)
+            {
+                resultArr[i] = new char[8];
+            }
+
+                int rowCount=0;
+            int rowIndex = 0;
             foreach (short piece in _positions)
             {
-                resultArr[Util.GetPieceOffset(piece)] = PieceTypeFENMap.PieceName(piece).ToString();
+
+
+                resultArr[Util.GetYForPiece(piece)][Util.GetXForPiece(piece)] = PieceTypeFENMap.PieceName(piece);
+                rowCount++;
+                if (rowCount % 8 == 0)
+                {
+                    rowIndex++;
+                }
+
             }
             int count = 0;
             StringBuilder sb = new StringBuilder();
             //we have to re-reverse the result for text-box
-            foreach (string p in resultArr.Reverse())
+            char[] rowText = new char[8];
+            resultArr = resultArr.Reverse().ToArray();
+            for (int i = 0; i < 8; i++)
             {
-                sb.Append(p ?? "-");
-                count++;
-                if (count % 8 == 0)
+                foreach (char p in resultArr[i])
                 {
-                    sb.Append("\r\n");
+                    rowText[count % 8] = p == 0 ? '-' : p;
+                    count++;
+                    if (count % 8 == 0)
+                    {
+                        sb.Append(rowText);
+                        sb.Append("\r\n");
+                    }
                 }
             }
             return sb.ToString();

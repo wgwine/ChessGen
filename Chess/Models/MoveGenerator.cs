@@ -6,13 +6,9 @@ using System.Threading.Tasks;
 
 namespace Chess.Models
 {
-    public class MoveGenerator
+    public static class MoveGenerator
     {
-        public MoveGenerator()
-        {
-
-        }
-        public List<short> GenerateMovesForPiece(short piece, List<short> board)
+        public static List<short> GenerateMovesForPiece(short piece, List<short> board)
         {
             PieceType pt = Util.GetPieceType(piece);
             switch (pt)

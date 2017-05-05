@@ -11,22 +11,82 @@ namespace Chess.Models
 
         public static List<short> PossiblePositions(short piece, List<short> board)
         {
+            int colorMatch = Util.IsWhite(piece) ? 1 : 2;
             List<short> result = new List<short>();
             short position = Util.GetPieceOffset(piece);
             short unpositionedPiece = (short)(piece - position);
             short R = (short)(Util.GetYForPosition(position) * 8);
-            for (short i = R; i < R + 7; i++)
+
+            short posX = Util.GetXForPosition(position);
+            short posY = Util.GetXForPosition(position);
+            bool stopA = false, stopB = false, stopC = false, stopD = false;
+
+            //expand out from piece position
+            for (int i = 1; i < 8; i++)
             {
-                if (i != position)
+                short a = (short)(position + (8 * i));//up
+                short b = (short)(position - (8 * i));//down
+                short c = (short)(position + (i));//right
+                short d = (short)(position - (i));//left
+
+                if (Util.GetXForPosition(a) == posX && Util.GetYForPosition(a) < 8 && !stopA)
                 {
-                    result.Add((short)(unpositionedPiece+i+R));
+                    var newPos = (short)(unpositionedPiece + a);
+                    if (board[a] > 0)
+                    {
+                        stopA = true;
+                        if (board[a] != colorMatch)
+                            result.Add((short)(unpositionedPiece + a));
+                    }
+                    else
+                    {
+                        result.Add((short)(unpositionedPiece + a));
+                    }
+                }
+                if (Util.GetXForPosition(b) == posX && Util.GetYForPosition(b) >=0 && !stopB)
+                {
+                    var newPos = (short)(unpositionedPiece + b);
+                    if (board[b] > 0)
+                    {
+                        stopB = true;
+                        if (board[b] != colorMatch)
+                            result.Add((short)(unpositionedPiece + b));
+                    }
+                    else
+                    {
+                        result.Add((short)(unpositionedPiece + b));
+                    }
+                }
+                if (Util.GetYForPosition(c) == posY && Util.GetXForPosition(c) < 8 && !stopC)
+                {
+                    var newPos = (short)(unpositionedPiece + c);
+                    if (board[c] > 0)
+                    {
+                        stopC = true;
+                        if (board[c] != colorMatch)
+                            result.Add((short)(unpositionedPiece + c));
+                    }
+                    else
+                    {
+                        result.Add((short)(unpositionedPiece + c));
+                    }
+                }
+                if (Util.GetYForPosition(d) == posY && Util.GetXForPosition(d) >= 0  && !stopD)
+                {
+                    var newPos = (short)(unpositionedPiece + d);
+                    if (board[d] > 0)
+                    {
+                        stopD = true;
+                        if (board[d] != colorMatch)
+                            result.Add((short)(unpositionedPiece + d));
+                    }
+                    else
+                    {
+                        result.Add((short)(unpositionedPiece + d));
+                    }
                 }
             }
-            R = (short)Util.GetXForPosition(position);
-            for (short i = R; i <= (56 + R); i += 8)
-            {
-                result.Add((short)(unpositionedPiece + i));
-            }
+
             return result;
         }
     }

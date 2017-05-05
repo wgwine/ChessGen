@@ -7,6 +7,8 @@ namespace Chess.Models
     {
         public static List<short> PossiblePositions(short piece, List<short> board)
         {
+            int colorMatch = Util.IsWhite(piece) ? 1 : 2;
+            List<short> tempResult = new List<short>();
             List<short> result = new List<short>();
             short position = Util.GetPieceOffset(piece);
             short positionX = Util.GetXForPosition(position);
@@ -15,49 +17,56 @@ namespace Chess.Models
             if (positionX < 7)
             {
                 //right
-                result.Add((short)(piece + 1));
+                tempResult.Add((short)(piece + 1));
 
                 if (positionY < 7)
                 {
                     //up right
-                    result.Add((short)(piece + 9));
+                    tempResult.Add((short)(piece + 9));
                 }
                 if (positionY > 0)
                 {
                     //down right
-                    result.Add((short)(piece - 7));
+                    tempResult.Add((short)(piece - 7));
                 }
             }
 
             if (positionX > 0)
             {
                 //left
-                result.Add((short)(piece - 1));
+                tempResult.Add((short)(piece - 1));
 
                 if (positionY < 7)
                 {
                     //up left
-                    result.Add((short)(piece +7));
+                    tempResult.Add((short)(piece +7));
                 }
                 if (positionY > 0)
                 {
                     //down left
-                    result.Add((short)(piece - 9));
+                    tempResult.Add((short)(piece - 9));
                 }
             }
 
             if (positionY <7)
             {
                 //up
-                result.Add((short)(piece +8));
+                tempResult.Add((short)(piece +8));
             }
 
             if (positionY > 0)
             {
                 //down
-                result.Add((short)(piece - 8));
+                tempResult.Add((short)(piece - 8));
             }
+            foreach(short move in tempResult)
+            {
 
+                if (board[Util.GetPieceOffset(move)] > 0 && board[Util.GetPieceOffset(move)] != colorMatch)
+                {
+                    result.Add(move);
+                }
+            }
             return result;
         }
     }

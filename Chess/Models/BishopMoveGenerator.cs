@@ -24,7 +24,7 @@ namespace Chess.Models
                 short b = (short)(position - (9 * i));//down left
                 short c = (short)(position + (7 * i));//up left
                 short d = (short)(position - (7 * i));//down right
-
+                //prevent wrapping
                 if (Util.GetXForPosition(a) > posX && Util.GetXForPosition(a) < 8 && Util.GetYForPosition(a) < 8 && !stopA)
                 {
                     var newPos = (short)(unpositionedPiece + a);
