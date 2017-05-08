@@ -49,6 +49,20 @@ namespace Chess
 
     public static class Util
     {
+        private static Random rng = new Random();
+
+        public static void Shuffle<T>(this IList<T> list)
+        {
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
+        }
         static Dictionary<char, short> files = new Dictionary<char, short>() { { 'a', 0 }, { 'b', 1 }, { 'c', 2 }, { 'd', 3 }, { 'e', 4 }, { 'f', 5 }, { 'g', 6 }, { 'h', 7 } };
         static char[] filesChar = new char[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' };
         public static short FileToShort(char file)
@@ -58,6 +72,11 @@ namespace Chess
         public static char ShortToFile(short file)
         {
             return filesChar[file];
+        }
+
+        public static short DepositionPiece(short piece)
+        {
+            return (short)(piece >> 6 << 6);
         }
         public static short GetYForPosition(short position)
         {
@@ -93,7 +112,7 @@ namespace Chess
         //first 3 bits are for piece type, but that is 8 values and we only have 6 pieces. Fill in the blanks with some character. 
         public static char[] PieceNames = new char[] { 'p', 'n', 'b', 'r', 'q', 'k','_','_', 'P', 'N', 'B', 'R', 'Q', 'K' };
         public static Dictionary<char,short> PieceValues = new Dictionary<char, short> { {'p',-1},{ 'P', 1 }, { 'n', -3 }, { 'N', 3 }, { 'b', -3 }, { 'B', 3 }, { 'r', -5 }, { 'R', 5 }, { 'q', -9 }, { 'Q', 9 }, { 'k', 0 }, { 'K', 0 } };
-        public static short[] PieceValuesIndexed = new short[] { -1,-3,-3,-5,-9,0,0,0,1,3,3,5,9,0};
+        public static short[] PieceValuesIndexed = new short[] { -1,-3,-3,-5,-9,-999,0,0,1,3,3,5,9,999};
         public static char GetPieceName(short piece)
         {
             //offset the position bits from the piece, and use the lookup array. 3 bits for type, and the 4th bit is color. 
@@ -102,6 +121,14 @@ namespace Chess
         public static short GetPieceValue(short piece)
         {
             return PieceValuesIndexed[(piece >> 6)];
+        }
+        public static bool IsBlackKing(short piece)
+        {
+            return (piece >> 6 << 6)==320;
+        }
+        public static bool IsWhiteKing(short piece)
+        {
+            return (piece >> 6 << 6) == 832;
         }
         public static bool GetBitAtPosition(short piece, byte pos)
         {

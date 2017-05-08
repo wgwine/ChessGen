@@ -11,7 +11,7 @@ namespace Chess.Models
 
         public static List<short> PossiblePositions(short piece, List<short> board)
         {
-            int colorMatch = Util.IsWhite(piece) ? 1 : 2;
+            bool isWhite = Util.IsWhite(piece);
             List<short> result = new List<short>();
             List<short> tempResult = new List<short>();
             short position = Util.GetPieceOffset(piece);
@@ -75,8 +75,8 @@ namespace Chess.Models
             }
             foreach (short move in tempResult)
             {
-
-                if (board[Util.GetPieceOffset(move)] > 0 && board[Util.GetPieceOffset(move)] != colorMatch)
+                short offset = Util.GetPieceOffset(move);
+                if (board[offset] > 0 && Util.IsWhite(board[offset]) != isWhite)
                 {
                     result.Add(move);
                 }

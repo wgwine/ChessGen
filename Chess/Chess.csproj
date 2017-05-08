@@ -53,6 +53,8 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="GameService.cs" />
+    <Compile Include="Models\KingCheckFinder.cs" />
+    <Compile Include="Models\Move.cs" />
     <Compile Include="Models\MoveGenerator.cs" />
     <Compile Include="Models\PawnMoveGenerator.cs" />
     <Compile Include="Models\BishopMoveGenerator.cs" />

@@ -59,7 +59,7 @@ namespace Chess.Models
 
         public Game()
         {
-            history = new Stack<Tuple<short, short,short>>();
+            history = new Stack<Tuple<short, short, short>>();
             _positions = new short[32]{
                 704,577,642,771,836,645,582,711,    //white royal
                 520,521,522,523,524,525,526,527,    //white pawns
@@ -139,47 +139,76 @@ namespace Chess.Models
                 enPassantSquare = (short)(Util.FileToShort(fenParts[3][0]) + (8 * (fenParts[3][1] - '1')));
             }
         }
-        public IEnumerable<Tuple<short, List<short>>> GetMoves()
+        public List<Move> GetMoves()
         {
             short[,] board = new short[8, 8];
-            bool[,] whiteBoard = new bool[8, 8];
-            bool[,] blackBoard = new bool[8, 8];
+            short[,] whiteBoard = new short[8, 8];
+            short[,] blackBoard = new short[8, 8];
             short[] occupationBoard = new short[8 * 8];
+            short whiteKing=0, blackKing=0, currentKingPiece;
+
+            //this can maybe be offloaded into move()
             foreach (short piece in _positions)
             {
                 short x = Util.GetXForPiece(piece);
                 short y = Util.GetYForPiece(piece);
                 board[x, y] = piece;
-                whiteBoard[x, y] = Util.IsWhite(piece);
-                blackBoard[x, y] = !Util.IsWhite(piece);
-            }
-            for (int x = 0; x < 8; x++)
-            {
-                for (int y = 0; y < 8; y++)
+                if (Util.IsWhiteKing(piece))
                 {
-                    if (whiteBoard[x, y])
-                    {
-                        occupationBoard[x + (8 * y)] = 1;
-                    }
-                    if (blackBoard[x, y])
-                    {
-                        occupationBoard[x + (8 * y)] = 2;
-                    }
+                    whiteKing = piece;
                 }
+                if (Util.IsBlackKing(piece))
+                {
+                    blackKing = piece;
+                }
+
+
+                occupationBoard[x + (8 * y)] = piece;
+                //if (Util.IsWhite(piece))
+                //{
+                //    occupationBoard[x + (8 * y)] = piece;
+                //}
+                //if (!Util.IsWhite(piece))
+                //{
+                //    occupationBoard[x + (8 * y)] = 2;
+                //}
             }
-            List<Tuple<short, List<short>>> returnVal=new List<Tuple<short, List<short>>>();
+            if (_whiteToMove)
+                currentKingPiece = whiteKing;
+            else
+                currentKingPiece = blackKing;
+
+            List<Tuple<short, List<short>>> returnVal = new List<Tuple<short, List<short>>>();
+            List<Move> returnMoves = new List<Move>();
+
             List<short> occupationList = occupationBoard.ToList();
             //returnVal = (_positions.AsParallel().Select(piece => new Tuple<short, List<short>>(piece, MoveGenerator.GenerateMovesForPiece(piece, occupationList)))).ToList();
             foreach (short piece in _positions)
             {
-                if((_whiteToMove&&Util.IsWhite(piece)) || (!_whiteToMove && !Util.IsWhite(piece)))
-                returnVal.Add(new Tuple<short, List<short>>(piece, MoveGenerator.GenerateMovesForPiece(piece, occupationList)));                    
+                //if ((_whiteToMove && Util.IsWhite(piece)) || (!_whiteToMove && !Util.IsWhite(piece)))
+                //    returnVal.Add(new Tuple<short, List<short>>(piece, MoveGenerator.GenerateMovesForPiece(piece, occupationList)));
+
+                if ((_whiteToMove && Util.IsWhite(piece)) || (!_whiteToMove && !Util.IsWhite(piece)))
+                    returnMoves.AddRange( MoveGenerator.GenerateMovesForPiece2(piece, occupationList));
             }
-            return returnVal;
+
+
+
+            //var checkLocks=KingCheckFinder.FindCheckLocks(currentKingPiece, occupationList, returnMoves);
+
+
+
+
+            return returnMoves;
         }
+
         public short BoardValue()
         {
             short value = 0;
+            //if (_positions.Count == 32)
+            //{
+            //    return 0;
+            //}
             foreach (short piece in _positions)
             {
                 value += Util.GetPieceValue(piece);
@@ -189,43 +218,42 @@ namespace Chess.Models
 
         public void Move(short currentPiece, short newPiece)
         {
-            if (_positions.Contains(currentPiece))
+            bool isWhite = Util.IsWhite(currentPiece);
+
+            short newOffset = Util.GetPieceOffset(newPiece);
+            short capturedPiece = -1;
+            foreach (short piece in _positions)
             {
-                short newOffset= Util.GetPieceOffset(newPiece);
-                short capturedPiece=-1;
-                foreach (short piece in _positions)
+                //check for captures and then record in history item, allows for undo
+                if (newOffset == Util.GetPieceOffset(piece) && Util.IsWhite(piece) != isWhite)
                 {
-                    short offset = Util.GetPieceOffset(piece);
-                    if(newOffset==offset && Util.IsWhite(piece) != Util.IsWhite(currentPiece))
-                    {
-                        capturedPiece = piece;
-                    }
+                    capturedPiece = piece;
                 }
-                if (capturedPiece >= 0)
-                {
-                    _positions.Remove(capturedPiece);
-                }
-                _whiteToMove = !Util.IsWhite(currentPiece);
-                _positions.Remove(currentPiece);
-                _positions.Add(newPiece);
-                history.Push(new Tuple<short, short, short>(currentPiece, newPiece, capturedPiece));
             }
+            if (capturedPiece >= 0)
+            {
+                _positions.Remove(capturedPiece);
+            }
+            _whiteToMove = !Util.IsWhite(currentPiece);
+            _positions.Remove(currentPiece);
+            _positions.Add(newPiece);
+            history.Push(new Tuple<short, short, short>(currentPiece, newPiece, capturedPiece));
+
         }
         public void Undo()
         {
             if (history.Count > 0)
             {
                 Tuple<short, short, short> move = history.Pop();
-                if (_positions.Contains(move.Item2))
+
+                _positions.Remove(move.Item2);
+                _positions.Add(move.Item1);
+                if (move.Item3 >= 0)
                 {
-                    _positions.Remove(move.Item2);
-                    _positions.Add(move.Item1);
-                    if (move.Item3 >= 0)
-                    {
-                        _positions.Add(move.Item3);
-                    }
-                    _whiteToMove = !Util.IsWhite(move.Item1);
+                    _positions.Add(move.Item3);
                 }
+                _whiteToMove = !Util.IsWhite(move.Item1);
+
             }
         }
         public string ToFENString()
@@ -309,13 +337,14 @@ namespace Chess.Models
                 sb.Append("-");
             }
 
-            
+
             if (enPassantSquare.HasValue)
             {
                 sb.Append(" ");
                 sb.Append(Util.ShortToFile(Util.GetXForPosition((byte)enPassantSquare.Value)));
                 sb.Append(Util.GetYForPosition((byte)enPassantSquare.Value) + 1);
-            }else
+            }
+            else
             {
                 sb.Append(" -");
             }
@@ -329,7 +358,7 @@ namespace Chess.Models
                 resultArr[i] = new char[8];
             }
 
-                int rowCount=0;
+            int rowCount = 0;
             int rowIndex = 0;
             foreach (short piece in _positions)
             {

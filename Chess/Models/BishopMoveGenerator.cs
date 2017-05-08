@@ -11,13 +11,13 @@ namespace Chess.Models
 
         public static List<short> PossiblePositions(short piece, List<short> board)
         {
-            int colorMatch = Util.IsWhite(piece)? 1 : 2;
+            bool isWhite = Util.IsWhite(piece);
             List<short> result = new List<short>();
             short position = Util.GetPieceOffset(piece);
-            short unpositionedPiece = (short)(piece - position);
+            short unpositionedPiece = Util.DepositionPiece(piece);
             short posX = Util.GetXForPosition(position);
             bool stopA = false, stopB = false, stopC = false, stopD = false;
-            for (short i = 0; i < 8; i++)
+            for (short i = 1; i < 8; i++)
             {
 
                 short a = (short)(position + (9 * i));//up right
@@ -31,7 +31,7 @@ namespace Chess.Models
                     if (board[a] > 0)
                     {
                         stopA = true;
-                        if(board[a]!=colorMatch)
+                        if(Util.IsWhite(board[a]) != isWhite)
                             result.Add((short)(unpositionedPiece + a));
                     }else
                     {
@@ -45,7 +45,7 @@ namespace Chess.Models
                     if (board[b] > 0)
                     {
                         stopB = true;
-                        if (board[b] != colorMatch)
+                        if (Util.IsWhite(board[b]) != isWhite)
                             result.Add((short)(unpositionedPiece + b));
                     }
                     else
@@ -60,7 +60,7 @@ namespace Chess.Models
                     if (board[c] > 0)
                     {
                         stopC = true;
-                        if (board[c] != colorMatch)
+                        if (Util.IsWhite(board[c]) != isWhite)
                             result.Add((short)(unpositionedPiece + c));
                     }
                     else
@@ -75,7 +75,7 @@ namespace Chess.Models
                     if (board[d] > 0)
                     {
                         stopD = true;
-                        if (board[d] != colorMatch)
+                        if (Util.IsWhite(board[d]) != isWhite)
                             result.Add((short)(unpositionedPiece + d));
                     }
                     else
@@ -84,6 +84,9 @@ namespace Chess.Models
                     }
                 }
             }
+
+
+
             return result;
         }
     }
