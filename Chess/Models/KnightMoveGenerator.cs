@@ -76,7 +76,7 @@ namespace Chess.Models
             foreach (short move in tempResult)
             {
                 short offset = Util.GetPieceOffset(move);
-                if (board[offset] > 0 && Util.IsWhite(board[offset]) != isWhite)
+                if (board[offset]==0 || (board[offset] > 0 && Util.IsWhite(board[offset]) != isWhite))
                 {
                     result.Add(move);
                 }

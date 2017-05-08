@@ -8,21 +8,26 @@ namespace Chess.Models
 {
     public static class KingCheckFinder
     {
-        public static bool IsKingChecked(short piece, List<short> board, List<Move> moves)
+        public static bool IsKingChecked(short currentKing, List<Move> enemyMoves)
         {
+            bool isChecked = false;
+            short position = Util.GetPieceOffset(currentKing);
+            foreach (Move m in enemyMoves)
+            {
+                if (Util.GetPieceOffset(m.To) == position)
+                    isChecked=true;
+            }
 
-
-
-            return false;
+            return isChecked;
         }
-        public static List<short> FindCheckLocks(short piece, List<short> board, List<Move> moves) 
+        public static List<short> FindCheckLocks(short currentKing, List<short> board, List<Move> moves) 
         {
 
             List<short> result = new List<short>();
-            int colorMatch = Util.IsWhite(piece) ? 1 : 2;
-            bool isWhite = Util.IsWhite(piece);
-            short position = Util.GetPieceOffset(piece);
-            short unpositionedPiece = Util.DepositionPiece(piece);
+            int colorMatch = Util.IsWhite(currentKing) ? 1 : 2;
+            bool isWhite = Util.IsWhite(currentKing);
+            short position = Util.GetPieceOffset(currentKing);
+            short unpositionedPiece = Util.DepositionPiece(currentKing);
             short kingX = Util.GetXForPosition(position);
             short kingY = Util.GetXForPosition(position);
             Dictionary<string, List<short>> myDiagonals = new Dictionary<string, List<short>>() {
@@ -37,7 +42,7 @@ namespace Chess.Models
                 { "UL", new List<short>() },
                 { "DR", new List<short>() }
             };
-            bool isInCheck = false;
+            //bool isInCheck = IsKingChecked(currentKing, board,moves);
             bool stopA = false, stopB = false, stopC = false, stopD = false;
             for (short i = 1; i < 8; i++)
             {

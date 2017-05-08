@@ -9,13 +9,45 @@ namespace Chess.Models
 {
     public class Game
     {
+        double[][] knightEval = new double[8][]{
+            new double[]{-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0},
+            new double[]{-4.0, -2.0, 0.0, 0.0, 0.0, 0.0, -2.0, -4.0},
+            new double[]{-3.0, 0.0, 1.0, 1.5, 1.5, 1.0, 0.0, -3.0},
+            new double[]{-3.0, 0.5, 1.5, 2.0, 2.0, 1.5, 0.5, -3.0},
+            new double[]{-3.0, 0.0, 1.5, 2.0, 2.0, 1.5, 0.0, -3.0},
+            new double[]{-3.0, 0.5, 1.0, 1.5, 1.5, 1.0, 0.5, -3.0},
+            new double[]{-4.0, -2.0, 0.0, 0.5, 0.5, 0.0, -2.0, -4.0},
+            new double[]{-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0}
+        };
+        double[][] bishopEvalBlack = new double[8][]{
+            new double[]{-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0},
+            new double[]{ -1.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -1.0},
+            new double[]{-1.0,  0.0,  0.5,  1.0,  1.0,  0.5,  0.0, -1.0},
+            new double[]{-1.0,  0.5,  0.5,  1.0,  1.0,  0.5,  0.5, -1.0},
+            new double[]{ -1.0,  0.0,  1.0,  1.0,  1.0,  1.0,  0.0, -1.0},
+            new double[]{-1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0, -1.0},
+            new double[]{ -1.0,  0.5,  0.0,  0.0,  0.0,  0.0,  0.5, -1.0},
+            new double[]{ -2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0}
+        };
+        double[][] pawnEvalBlack = new double[8][]{
+            new double[]{0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0},
+            new double[]{5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0},
+            new double[]{1.0,  1.0,  2.0,  3.0,  3.0,  2.0,  1.0,  1.0},
+            new double[]{0.5,  0.5,  1.0,  2.5,  2.5,  1.0,  0.5,  0.5},
+            new double[]{0.0,  0.0,  0.0,  2.0,  2.0,  0.0,  0.0,  0.0},
+            new double[]{0.5, -0.5, -1.0,  0.0,  0.0, -1.0, -0.5,  0.5},
+            new double[]{0.5,  1.0, 1.0,  -2.0, -2.0,  1.0,  1.0,  0.5},
+            new double[]{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
+        };
+        double[][] pawnEvalWhite;
+        double[][] bishopEvalWhite;
         private List<short> _positions;
         private bool _whiteOOCastle = true;
         private bool _whiteOOOCastle = true;
         private bool _blackOOCastle = true;
         private bool _blackOOOCastle = true;
         private bool _whiteToMove = true;
-        private short? enPassantSquare;
+        private short? enPassantSquare; short whiteKing = 0, blackKing = 0, currentKingPiece;
         private Stack<Tuple<short, short, short>> history;
         public List<short> Positions
         {
@@ -66,10 +98,13 @@ namespace Chess.Models
                 48,49,50,51,52,53,54,55,            //black pawns
                 248,121,186,315,380,189,126,255     //black royal
             }.ToList();
+            bishopEvalBlack = bishopEvalWhite.Reverse().ToArray();
         }
         public Game(string fen)
         {
             history = new Stack<Tuple<short, short, short>>();
+             bishopEvalWhite = bishopEvalBlack.Reverse().ToArray();
+            pawnEvalWhite = pawnEvalBlack.Reverse().ToArray();
             //split the sections of the FEN string with spaces
             string[] fenParts = fen.Trim().Split(' ');
 
@@ -145,7 +180,7 @@ namespace Chess.Models
             short[,] whiteBoard = new short[8, 8];
             short[,] blackBoard = new short[8, 8];
             short[] occupationBoard = new short[8 * 8];
-            short whiteKing=0, blackKing=0, currentKingPiece;
+
 
             //this can maybe be offloaded into move()
             foreach (short piece in _positions)
@@ -153,13 +188,13 @@ namespace Chess.Models
                 short x = Util.GetXForPiece(piece);
                 short y = Util.GetYForPiece(piece);
                 board[x, y] = piece;
-                if (Util.IsWhiteKing(piece))
+                if (_whiteToMove && Util.IsWhiteKing(piece))
                 {
-                    whiteKing = piece;
+                    currentKingPiece = piece;
                 }
-                if (Util.IsBlackKing(piece))
+                if (!_whiteToMove && Util.IsBlackKing(piece))
                 {
-                    blackKing = piece;
+                    currentKingPiece = piece;
                 }
 
 
@@ -173,45 +208,126 @@ namespace Chess.Models
                 //    occupationBoard[x + (8 * y)] = 2;
                 //}
             }
-            if (_whiteToMove)
-                currentKingPiece = whiteKing;
-            else
-                currentKingPiece = blackKing;
+
 
             List<Tuple<short, List<short>>> returnVal = new List<Tuple<short, List<short>>>();
             List<Move> returnMoves = new List<Move>();
 
             List<short> occupationList = occupationBoard.ToList();
             //returnVal = (_positions.AsParallel().Select(piece => new Tuple<short, List<short>>(piece, MoveGenerator.GenerateMovesForPiece(piece, occupationList)))).ToList();
+            bool inCheck = false;
+            List<short> checkingPieces = new List<short>();
+
+            //generate my possible moves
             foreach (short piece in _positions)
             {
-                //if ((_whiteToMove && Util.IsWhite(piece)) || (!_whiteToMove && !Util.IsWhite(piece)))
-                //    returnVal.Add(new Tuple<short, List<short>>(piece, MoveGenerator.GenerateMovesForPiece(piece, occupationList)));
+                if (_whiteToMove == Util.IsWhite(piece)) { 
+                    returnMoves.AddRange(MoveGenerator.GenerateMovesForPiece2(piece, occupationList));
+                }
 
-                if ((_whiteToMove && Util.IsWhite(piece)) || (!_whiteToMove && !Util.IsWhite(piece)))
-                    returnMoves.AddRange( MoveGenerator.GenerateMovesForPiece2(piece, occupationList));
+            }
+            List<Move> nonCheckingMoves = new List<Models.Move>();
+            //if I am in check, I can only return moves that resolve it, as well as moves that dont cause check
+            short[] currentBoard = new short[8 * 8];
+
+
+
+            foreach (Move m in returnMoves)
+            {
+                bool kingChecked = false;
+                Move(m.From, m.To);
+                foreach (short piece in _positions)
+                {
+                    short x = Util.GetXForPiece(piece);
+                    short y = Util.GetYForPiece(piece);
+                    currentBoard[x + (8 * y)] = piece;
+                    if (_whiteToMove && Util.IsWhiteKing(piece))
+                    {
+                        currentKingPiece = piece;
+                    }
+                    if (!_whiteToMove && Util.IsBlackKing(piece))
+                    {
+                        currentKingPiece = piece;
+                    }
+                }
+
+                foreach (short piece in _positions)
+                {
+                    kingChecked = false;
+                    if (KingCheckFinder.IsKingChecked(currentKingPiece, MoveGenerator.GenerateMovesForPiece2(piece, currentBoard.ToList())))
+                    {
+                        kingChecked = true;
+                    }
+                }
+                Undo();
+                if (!kingChecked)
+                {
+                    nonCheckingMoves.Add(m);
+                }
+
             }
 
-
-
+            return nonCheckingMoves;
             //var checkLocks=KingCheckFinder.FindCheckLocks(currentKingPiece, occupationList, returnMoves);
 
 
-
-
-            return returnMoves;
         }
 
-        public short BoardValue()
+        public double BoardValue()
         {
-            short value = 0;
+            double value = 0;
             //if (_positions.Count == 32)
             //{
             //    return 0;
             //}
             foreach (short piece in _positions)
             {
-                value += Util.GetPieceValue(piece);
+                char pN = Util.GetPieceName(piece);
+                short x = Util.GetXForPiece(piece);
+                short y = Util.GetYForPiece(piece);
+                switch (pN)
+                {
+                    case 'P':
+                        value += 10 + pawnEvalWhite[y][x]; ;
+                        break;
+                    case 'p':
+                        value -= 10 + pawnEvalBlack[y][x]; ;
+                        break;
+                    case 'R':
+                        value += 50;
+                        break;
+                    case 'r':
+                        value -= 50;
+                        break;
+                    case 'B':
+                        value += 30 + bishopEvalWhite[y][x];
+                        break;
+                    case 'b':
+                        value -= 30 + bishopEvalBlack[y][x];
+                        break;
+                    case 'N':
+                        value += 30 + knightEval[y][x];
+                        break;
+                    case 'n':
+                        value -= 30 + knightEval[y][x];
+                        break;
+                    case 'Q':
+                        value += 90;
+                        break;
+                    case 'q':
+                        value -= 90;
+                        break;
+                    case 'K':
+                        value += 900;
+                        break;
+                    case 'k':
+                        value -= 900;
+                        break;
+                    default:
+                        break;
+                }
+
+                //value += Util.GetPieceValue(piece);
             }
             return value;
         }
@@ -234,7 +350,7 @@ namespace Chess.Models
             {
                 _positions.Remove(capturedPiece);
             }
-            _whiteToMove = !Util.IsWhite(currentPiece);
+            _whiteToMove = !_whiteToMove;
             _positions.Remove(currentPiece);
             _positions.Add(newPiece);
             history.Push(new Tuple<short, short, short>(currentPiece, newPiece, capturedPiece));
@@ -252,7 +368,7 @@ namespace Chess.Models
                 {
                     _positions.Add(move.Item3);
                 }
-                _whiteToMove = !Util.IsWhite(move.Item1);
+                _whiteToMove = !_whiteToMove;
 
             }
         }
