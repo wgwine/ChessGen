@@ -39,8 +39,40 @@ namespace Chess.Models
             new double[]{0.5,  1.0, 1.0,  -2.0, -2.0,  1.0,  1.0,  0.5},
             new double[]{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
         };
+        double[][] rookEvalBlack = new double[8][]{
+            new double[]{0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0},
+            new double[]{ 0.5,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  0.5},
+            new double[]{ -0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5},
+            new double[]{ -0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5},
+            new double[]{-0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5},
+            new double[]{ -0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5},
+            new double[]{-0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5},
+            new double[]{  0.0,   0.0, 0.0,  0.5,  0.5,  0.0,  0.0,  0.0}
+        };
+        double[][] queenEval = new double[8][]{
+            new double[]{ -2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0},
+            new double[]{ -1.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -1.0},
+            new double[]{ -1.0,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -1.0},
+            new double[]{ -0.5,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -0.5},
+            new double[]{  0.0,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -0.5},
+            new double[]{ -1.0,  0.5,  0.5,  0.5,  0.5,  0.5,  0.0, -1.0},
+            new double[]{ -1.0,  0.0,  0.5,  0.0,  0.0,  0.0,  0.0, -1.0},
+            new double[]{ -2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0 }
+        };
+        double[][] kingEvalBlack = new double[8][]{
+            new double[]{  -3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0},
+            new double[]{ -3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0},
+            new double[]{-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0},
+            new double[]{  -3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0},
+            new double[]{   -2.0, -3.0, -3.0, -4.0, -4.0, -3.0, -3.0, -2.0},
+            new double[]{  -1.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -1.0},
+            new double[]{  2.0,  2.0,  0.0,  0.0,  0.0,  0.0,  2.0,  2.0},
+            new double[]{  2.0,  3.0,  1.0,  0.0,  0.0,  1.0,  3.0,  2.0  }
+        };
         double[][] pawnEvalWhite;
         double[][] bishopEvalWhite;
+        double[][] rookEvalWhite;
+        double[][] kingEvalWhite;
         private List<short> _positions;
         private bool _whiteOOCastle = true;
         private bool _whiteOOOCastle = true;
@@ -49,6 +81,7 @@ namespace Chess.Models
         private bool _whiteToMove = true;
         private short? enPassantSquare; short whiteKing = 0, blackKing = 0, currentKingPiece;
         private Stack<Tuple<short, short, short>> history;
+        private Stack<Move> history2;
         public List<short> Positions
         {
             get { return _positions; }
@@ -103,8 +136,11 @@ namespace Chess.Models
         public Game(string fen)
         {
             history = new Stack<Tuple<short, short, short>>();
-             bishopEvalWhite = bishopEvalBlack.Reverse().ToArray();
+            history2 = new Stack<Move>();
+            bishopEvalWhite = bishopEvalBlack.Reverse().ToArray();
             pawnEvalWhite = pawnEvalBlack.Reverse().ToArray();
+            rookEvalWhite = rookEvalBlack.Reverse().ToArray();
+            kingEvalWhite= kingEvalBlack.Reverse().ToArray();
             //split the sections of the FEN string with spaces
             string[] fenParts = fen.Trim().Split(' ');
 
@@ -176,18 +212,14 @@ namespace Chess.Models
         }
         public List<Move> GetMoves()
         {
-            short[,] board = new short[8, 8];
-            short[,] whiteBoard = new short[8, 8];
-            short[,] blackBoard = new short[8, 8];
             short[] occupationBoard = new short[8 * 8];
 
+            List<short> myPieces = _positions.Where(e => _whiteToMove == Util.IsWhite(e)).ToList();
+            List<short> enemyPieces = _positions.Where(e => _whiteToMove == !Util.IsWhite(e)).ToList();
 
             //this can maybe be offloaded into move()
             foreach (short piece in _positions)
             {
-                short x = Util.GetXForPiece(piece);
-                short y = Util.GetYForPiece(piece);
-                board[x, y] = piece;
                 if (_whiteToMove && Util.IsWhiteKing(piece))
                 {
                     currentKingPiece = piece;
@@ -196,37 +228,33 @@ namespace Chess.Models
                 {
                     currentKingPiece = piece;
                 }
-
-
-                occupationBoard[x + (8 * y)] = piece;
-                //if (Util.IsWhite(piece))
-                //{
-                //    occupationBoard[x + (8 * y)] = piece;
-                //}
-                //if (!Util.IsWhite(piece))
-                //{
-                //    occupationBoard[x + (8 * y)] = 2;
-                //}
+                occupationBoard[Util.GetPieceOffset(piece)] = piece;
             }
 
-
-            List<Tuple<short, List<short>>> returnVal = new List<Tuple<short, List<short>>>();
             List<Move> returnMoves = new List<Move>();
 
             List<short> occupationList = occupationBoard.ToList();
             //returnVal = (_positions.AsParallel().Select(piece => new Tuple<short, List<short>>(piece, MoveGenerator.GenerateMovesForPiece(piece, occupationList)))).ToList();
-            bool inCheck = false;
+            bool kingChecked = false;
             List<short> checkingPieces = new List<short>();
-
-            //generate my possible moves
             foreach (short piece in _positions)
             {
-                if (_whiteToMove == Util.IsWhite(piece)) { 
-                    returnMoves.AddRange(MoveGenerator.GenerateMovesForPiece2(piece, occupationList));
-                }
 
             }
-            List<Move> nonCheckingMoves = new List<Models.Move>();
+            //generate my possible moves
+            foreach (short piece in enemyPieces)
+            {
+                if (KingCheckFinder.IsKingChecked(currentKingPiece, MoveGenerator.GenerateMovesForPiece2(piece, occupationList)))
+                {
+                    kingChecked = true;
+                }
+            }
+
+            foreach (short piece in myPieces)
+            {
+                returnMoves.AddRange(MoveGenerator.GenerateMovesForPiece2(piece, occupationList));
+            }
+            List<Move> nonCheckingMoves = new List<Move>();
             //if I am in check, I can only return moves that resolve it, as well as moves that dont cause check
             short[] currentBoard = new short[8 * 8];
 
@@ -234,33 +262,36 @@ namespace Chess.Models
 
             foreach (Move m in returnMoves)
             {
-                bool kingChecked = false;
-                Move(m.From, m.To);
+                //if (m.To==846 && m.From==837 && System.Diagnostics.Debugger.IsAttached)
+                //    System.Diagnostics.Debugger.Break();
+                bool tkingChecked = false;
+                Move(m);
+                if (!_whiteToMove && Util.IsWhiteKing(m.From))
+                {
+                    currentKingPiece = m.To;
+                }
+                if (_whiteToMove && Util.IsBlackKing(m.From))
+                {
+                    currentKingPiece = m.To;
+                }
                 foreach (short piece in _positions)
                 {
                     short x = Util.GetXForPiece(piece);
                     short y = Util.GetYForPiece(piece);
                     currentBoard[x + (8 * y)] = piece;
-                    if (_whiteToMove && Util.IsWhiteKing(piece))
-                    {
-                        currentKingPiece = piece;
-                    }
-                    if (!_whiteToMove && Util.IsBlackKing(piece))
-                    {
-                        currentKingPiece = piece;
-                    }
-                }
 
-                foreach (short piece in _positions)
+                }
+     
+                foreach (short piece in enemyPieces)
                 {
-                    kingChecked = false;
+
                     if (KingCheckFinder.IsKingChecked(currentKingPiece, MoveGenerator.GenerateMovesForPiece2(piece, currentBoard.ToList())))
                     {
-                        kingChecked = true;
+                        tkingChecked = true;
                     }
                 }
                 Undo();
-                if (!kingChecked)
+                if (!kingChecked && !tkingChecked)
                 {
                     nonCheckingMoves.Add(m);
                 }
@@ -294,10 +325,10 @@ namespace Chess.Models
                         value -= 10 + pawnEvalBlack[y][x]; ;
                         break;
                     case 'R':
-                        value += 50;
+                        value += 50 + rookEvalWhite[y][x];
                         break;
                     case 'r':
-                        value -= 50;
+                        value -= 50 + rookEvalBlack[y][x];
                         break;
                     case 'B':
                         value += 30 + bishopEvalWhite[y][x];
@@ -312,16 +343,16 @@ namespace Chess.Models
                         value -= 30 + knightEval[y][x];
                         break;
                     case 'Q':
-                        value += 90;
+                        value += 90+ queenEval[y][x];
                         break;
                     case 'q':
-                        value -= 90;
+                        value -= 90 + queenEval[y][x];
                         break;
                     case 'K':
-                        value += 900;
+                        value += 900+ kingEvalWhite[y][x];
                         break;
                     case 'k':
-                        value -= 900;
+                        value -= 900 + kingEvalBlack[y][x];
                         break;
                     default:
                         break;
@@ -331,42 +362,42 @@ namespace Chess.Models
             }
             return value;
         }
-
-        public void Move(short currentPiece, short newPiece)
+        public Move Move(Move m)
         {
-            bool isWhite = Util.IsWhite(currentPiece);
+            bool isWhite = Util.IsWhite(m.From);
 
-            short newOffset = Util.GetPieceOffset(newPiece);
+            short newOffset = Util.GetPieceOffset(m.To);
             short capturedPiece = -1;
             foreach (short piece in _positions)
             {
                 //check for captures and then record in history item, allows for undo
                 if (newOffset == Util.GetPieceOffset(piece) && Util.IsWhite(piece) != isWhite)
                 {
-                    capturedPiece = piece;
+                    m.Captured = piece;
                 }
             }
-            if (capturedPiece >= 0)
+            if (m.Captured.HasValue)
             {
-                _positions.Remove(capturedPiece);
+                _positions.Remove(m.Captured.Value);
             }
             _whiteToMove = !_whiteToMove;
-            _positions.Remove(currentPiece);
-            _positions.Add(newPiece);
-            history.Push(new Tuple<short, short, short>(currentPiece, newPiece, capturedPiece));
+            _positions.Remove(m.From);
+            _positions.Add(m.To);
+            history2.Push(m);
+            return history2.Peek();
 
         }
         public void Undo()
         {
-            if (history.Count > 0)
+            if (history2.Count > 0)
             {
-                Tuple<short, short, short> move = history.Pop();
+                Move move = history2.Pop();
 
-                _positions.Remove(move.Item2);
-                _positions.Add(move.Item1);
-                if (move.Item3 >= 0)
+                _positions.Remove(move.To);
+                _positions.Add(move.From);
+                if (move.Captured.HasValue)
                 {
-                    _positions.Add(move.Item3);
+                    _positions.Add(move.Captured.Value);
                 }
                 _whiteToMove = !_whiteToMove;
 

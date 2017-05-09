@@ -17,6 +17,7 @@ namespace Chess
             InitializeComponent();
             gs = new GameService();
         }
+        Game mainGame;
 
         private void button3_Click(object sender, EventArgs e)
         {
@@ -27,14 +28,15 @@ namespace Chess
             Stopwatch w = new Stopwatch();
             w.Start();
             g = new Game(value);
+            mainGame = g;
             string s = "";
             count = 0;
             textBox3.Text = "";
 
             bool isMax = true;
             string initialValue = g.BoardValue().ToString();
-            bool isSucky = false;
-            for (int jj = 0; jj < 150; jj++)
+            bool isSucky = true;
+            for (int jj = 0; jj < 250; jj++)
             {
                 try
                 {
@@ -45,11 +47,12 @@ namespace Chess
                         throw new Exception();
 
                     }
-                    g.Move(bestMove.From, bestMove.To);
+                    bestMove=g.Move(bestMove);
                     string name = Util.GetPieceName(bestMove.From).ToString();
                     string fileTo = Util.ShortToFile(Util.GetXForPiece(bestMove.To)).ToString();
                     string rankTo = (Util.GetYForPiece(bestMove.To) + 1).ToString();
-                    sb.Append(name + fileTo + rankTo + " : " + g.BoardValue() + "\r\n");
+                    string move = string.Format("{3} From:{0}, To:{1}({4},{5}), Capturing:{2}, Value:{6}\r\n", bestMove.From, bestMove.To, bestMove.Captured, name, fileTo, rankTo, g.BoardValue());
+                    sb.Append(move);
 
                     s = g.ToString();
                     sb.Append(s);
@@ -58,8 +61,7 @@ namespace Chess
                 catch 
                 {
                     sb.Append("\r\n\r\nCHECKMATE!");
-                    jj = 150;
-                    g.GetMoves();
+                    jj = 250;
                 }
                 //isMax = !isMax;
 
@@ -80,35 +82,35 @@ namespace Chess
                 throw new Exception();
 
             }
-            //moves.Shuffle();
+            moves.Shuffle();
             double bestMove = -9999;
             Move bestMoveFound = moves.FirstOrDefault();
 
             string FENFEN = g.ToFENString();
-            foreach (Move move in moves)
+            //foreach (Move move in moves)
+            //{
+                List<Tuple<Move, double>> returnVal = moves.AsParallel().Select((move) =>
             {
-               // List<Tuple<Move, double>> returnVal = moves.AsParallel().Select((move) =>
-           // {
                 Game g2 = new Game(FENFEN);
-                g2.Move(move.From, move.To);
+                g2.Move(move);
 
                 double value = MiniMax(depth - 1, g2, -10000, 10000, !IsMaximizingPlayer);
 
                 g2.Undo();
 
 
-               // return new Tuple<Move, double>(bestMoveFound, value);
-            //}).ToList();
+                return new Tuple<Move, double>(bestMoveFound, value);
+            }).ToList();
 
-            //foreach(var moveTuple in returnVal)
-           // {
-                if (value > bestMove)
+            foreach (var moveTuple in returnVal)
+            {
+                if (moveTuple.Item2 >= bestMove)
                 {
-                    bestMove = value;
-                    bestMoveFound = move;
+                    bestMove = moveTuple.Item2;
+                    bestMoveFound = moveTuple.Item1;
                 }
-            //}
             }
+           // }
 
             return bestMoveFound;
         }
@@ -120,17 +122,17 @@ namespace Chess
             }
 
             List<Move> moves = g.GetMoves();
-            if (depth == 1)
-            {
-                moves.Shuffle();
-            }
+            //if (depth == 1)
+            //{
+            //    moves.Shuffle();
+            //}
                 if (IsMaximizingPlayer)
             {
                 double bestMove = -9999;
                 foreach (Move move in moves)
                 {
 
-                    g.Move(move.From, move.To);
+                    g.Move(move);
                     bestMove = Math.Max(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer));
                     g.Undo();
                     alpha = Math.Max(alpha, bestMove);
@@ -146,7 +148,7 @@ namespace Chess
                 double bestMove = 9999;
                 foreach (Move move in moves)
                 {
-                    g.Move(move.From, move.To);
+                    g.Move(move);
                     bestMove = Math.Min(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer));
                     g.Undo();
                     beta = Math.Min(beta, bestMove);
@@ -173,7 +175,7 @@ namespace Chess
             foreach (Move move in mov)
             {
                 count++;
-                g.Move(move.From, move.To);
+                g.Move(move);
                 short newValue = GetBestMove(depth - 1, g);
                 g.Undo();
                 if ((g.WhiteToMove && newValue > bestValue) || (!g.WhiteToMove && newValue < bestValue))
@@ -182,6 +184,23 @@ namespace Chess
                 }
             }
             return bestValue;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            mainGame.Undo();
+            List<Move> moves = mainGame.GetMoves();
+            StringBuilder sb = new StringBuilder();
+            foreach(Move m in moves)
+            {
+                string name = Util.GetPieceName(m.From).ToString();
+                string fileTo = Util.ShortToFile(Util.GetXForPiece(m.To)).ToString();
+                string rankTo = (Util.GetYForPiece(m.To) + 1).ToString();
+                string move = string.Format("{2} From:{0}, To:{1}({3},{4})\r\n", m.From, m.To, name, fileTo, rankTo);
+                sb.Append(move);
+            }
+       
+            textBox3.Text += sb.ToString();
         }
     }
 }

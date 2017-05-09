@@ -112,7 +112,7 @@ namespace Chess.Models
                 //    temp += 1024;
                 //}
 
-                result.Add((short)(newPosition | depositionedPiece));
+                result.Add((short)(newPosition + depositionedPiece));
             }
 
             return result;

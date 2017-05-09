@@ -10,8 +10,9 @@ namespace Chess.Models
             bool isWhite = Util.IsWhite(piece);
             List<short> tempResult = new List<short>();
             List<short> result = new List<short>();
-            short depositionedPiece = Util.DepositionPiece(piece);
+
             short position = Util.GetPieceOffset(piece);
+            short depositionedPiece =(short)(piece - position);
             short positionX = Util.GetXForPosition(position);
             short positionY = Util.GetYForPosition(position);
 
@@ -65,7 +66,7 @@ namespace Chess.Models
                 short offset = Util.GetPieceOffset(move);
                 if (board[move] == 0 || (board[offset] > 0 && Util.IsWhite(board[offset]) != isWhite))
                 {
-                    result.Add((short)(move| depositionedPiece));
+                    result.Add((short)(move + depositionedPiece));
                 }
             }
             return result;
