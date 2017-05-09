@@ -71,6 +71,27 @@ namespace Chess
             w.Stop();
             textBox3.Text += w.ElapsedMilliseconds + "ms for " + count + " options. "+ initialValue+"\r\n\r\n";
             textBox3.Text += sb.ToString();
+            int turn = 0;
+            int num = 1;
+            foreach(Move m in g.history.Reverse())
+            {
+                string name = Util.GetPieceProperName(m.From).ToString();
+                string fileTo = Util.ShortToFile(Util.GetXForPiece(m.To)).ToString();
+                string fileFrom = Util.ShortToFile(Util.GetXForPiece(m.From)).ToString();
+                string rankTo = (Util.GetYForPiece(m.To) + 1).ToString();
+                string rankFrom = (Util.GetYForPiece(m.From) + 1).ToString();
+                string cap = m.Captured.HasValue ? "x" : "";
+                name += fileFrom + rankFrom; 
+                string numStr = turn % 2 == 0 ? "\r\n" +num.ToString() + ". " : " ";
+                string move = string.Format("{0}{1}{2}{3}{4} ", numStr, name,cap, fileTo, rankTo);
+                if (turn % 2 == 0)
+                {
+                    num++;
+                }
+                textBox3.Text += move;
+
+                turn++;
+            }
         }
 
         public Move MinMaxRoot(int depth, Game g, bool IsMaximizingPlayer)
@@ -84,7 +105,8 @@ namespace Chess
             }
             moves.Shuffle();
             double bestMove = -9999;
-            Move bestMoveFound = moves.FirstOrDefault();
+            Random r = new Random();
+            Move bestMoveFound = moves[r.Next(moves.Count-1)];
 
             string FENFEN = g.ToFENString();
             //foreach (Move move in moves)

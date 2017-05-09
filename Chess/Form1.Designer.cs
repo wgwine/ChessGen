@@ -39,7 +39,7 @@
             // 
             this.textBox2.Location = new System.Drawing.Point(12, 25);
             this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(260, 20);
+            this.textBox2.Size = new System.Drawing.Size(579, 20);
             this.textBox2.TabIndex = 8;
             this.textBox2.Text = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
             // 

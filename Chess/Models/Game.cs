@@ -80,8 +80,7 @@ namespace Chess.Models
         private bool _blackOOOCastle = true;
         private bool _whiteToMove = true;
         private short? enPassantSquare; short whiteKing = 0, blackKing = 0, currentKingPiece;
-        private Stack<Tuple<short, short, short>> history;
-        private Stack<Move> history2;
+        public Stack<Move> history;
         public List<short> Positions
         {
             get { return _positions; }
@@ -124,7 +123,7 @@ namespace Chess.Models
 
         public Game()
         {
-            history = new Stack<Tuple<short, short, short>>();
+            history = new Stack<Move>();
             _positions = new short[32]{
                 704,577,642,771,836,645,582,711,    //white royal
                 520,521,522,523,524,525,526,527,    //white pawns
@@ -135,8 +134,7 @@ namespace Chess.Models
         }
         public Game(string fen)
         {
-            history = new Stack<Tuple<short, short, short>>();
-            history2 = new Stack<Move>();
+            history = new Stack<Move>();
             bishopEvalWhite = bishopEvalBlack.Reverse().ToArray();
             pawnEvalWhite = pawnEvalBlack.Reverse().ToArray();
             rookEvalWhite = rookEvalBlack.Reverse().ToArray();
@@ -157,7 +155,7 @@ namespace Chess.Models
                     string row = positionRows[y];
                     //and we have to reverse the row itself too.
                     char[] charArray = row.ToCharArray();
-                    Array.Reverse(charArray);
+
                     row = new string(charArray);
 
                     for (int x = 0; x < row.Length; x++)
@@ -264,13 +262,13 @@ namespace Chess.Models
             {
                 //if (m.To==846 && m.From==837 && System.Diagnostics.Debugger.IsAttached)
                 //    System.Diagnostics.Debugger.Break();
-                bool tkingChecked = false;
+                kingChecked = false;
                 Move(m);
-                if (!_whiteToMove && Util.IsWhiteKing(m.From))
+                if (!_whiteToMove && Util.IsWhiteKing(m.To))
                 {
                     currentKingPiece = m.To;
                 }
-                if (_whiteToMove && Util.IsBlackKing(m.From))
+                if (_whiteToMove && Util.IsBlackKing(m.To))
                 {
                     currentKingPiece = m.To;
                 }
@@ -287,11 +285,11 @@ namespace Chess.Models
 
                     if (KingCheckFinder.IsKingChecked(currentKingPiece, MoveGenerator.GenerateMovesForPiece2(piece, currentBoard.ToList())))
                     {
-                        tkingChecked = true;
+                        kingChecked = true;
                     }
                 }
                 Undo();
-                if (!kingChecked && !tkingChecked)
+                if (!kingChecked)
                 {
                     nonCheckingMoves.Add(m);
                 }
@@ -383,15 +381,15 @@ namespace Chess.Models
             _whiteToMove = !_whiteToMove;
             _positions.Remove(m.From);
             _positions.Add(m.To);
-            history2.Push(m);
-            return history2.Peek();
+            history.Push(m);
+            return history.Peek();
 
         }
         public void Undo()
         {
-            if (history2.Count > 0)
+            if (history.Count > 0)
             {
-                Move move = history2.Pop();
+                Move move = history.Pop();
 
                 _positions.Remove(move.To);
                 _positions.Add(move.From);

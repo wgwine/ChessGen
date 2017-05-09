@@ -37,12 +37,12 @@ namespace Chess.Models
                         tempResult.Add((short)(position + standardMoveOffset));
                     }
                     //captures
-                    if (board[position + captureOffset1] > 0 && Util.IsWhite(board[position + captureOffset1]) != isWhite)
+                    if (positionX > 0 && board[position + captureOffset1] > 0 && Util.IsWhite(board[position + captureOffset1]) != isWhite)
                     {
                         tempResult.Add((short)(position + captureOffset1));
                     }
 
-                    if (board[position + captureOffset2] > 0 && Util.IsWhite(board[position + captureOffset2]) != isWhite)
+                    if (positionX < 7 && board[position + captureOffset2] > 0 && Util.IsWhite(board[position + captureOffset2]) != isWhite)
                     {
                         tempResult.Add((short)(position + captureOffset2));
                     }
@@ -76,10 +76,10 @@ namespace Chess.Models
                     if (board[position + standardMoveOffset] == 0)
                         tempResult.Add((short)(position + standardMoveOffset));
 
-                    if (board[position + captureOffset1] > 0 && Util.IsWhite(board[position + captureOffset1]) != isWhite)
+                    if (positionX <7 && board[position + captureOffset1] > 0 && Util.IsWhite(board[position + captureOffset1]) != isWhite)
                         tempResult.Add((short)(position + captureOffset1));
 
-                    if (board[position + captureOffset2] > 0 && Util.IsWhite(board[position + captureOffset2]) != isWhite)
+                    if (positionX > 0 && board[position + captureOffset2] > 0 && Util.IsWhite(board[position + captureOffset2]) != isWhite)
                         tempResult.Add((short)(position + captureOffset2));
 
                     if (positionY == 6)
