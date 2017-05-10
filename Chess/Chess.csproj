@@ -65,6 +65,7 @@
     <Compile Include="Models\KingMoveGenerator.cs" />
     <Compile Include="Models\KnightMoveGenerator.cs" />
     <Compile Include="Models\RookMoveGenerator.cs" />
+    <Compile Include="Models\StalemateException.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">

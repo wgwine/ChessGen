@@ -22,7 +22,7 @@ namespace Chess.Models
             bool stopA = false, stopB = false, stopC = false, stopD = false;
 
             //expand out from piece position
-            for (int i = 0; i < 8; i++)
+            for (int i = 1; i < 8; i++)
             {
                 short a = (short)(position + (8 * i));//up
                 short b = (short)(position - (8 * i));//down

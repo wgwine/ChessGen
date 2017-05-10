@@ -5,6 +5,8 @@ using Chess.Models;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace Chess
 {
@@ -36,7 +38,8 @@ namespace Chess
             bool isMax = true;
             string initialValue = g.BoardValue().ToString();
             bool isSucky = true;
-            for (int jj = 0; jj < 250; jj++)
+            int maxMoves = 150;
+            for (int jj = 0; jj < maxMoves; jj++)
             {
                 try
                 {
@@ -55,13 +58,20 @@ namespace Chess
                     sb.Append(move);
 
                     s = g.ToString();
-                    sb.Append(s);
+                    sb.Append(g.ToString());
+                    sb.Append("\r\n\r\n");
+                    sb.Append(g.ToFENString());
                     sb.Append("\r\n\r\n");
                 }
-                catch 
+                catch(StalemateException ex)
+                {
+                    sb.Append("\r\n\r\nSTALEMATE!");
+                    jj = maxMoves;
+                }
+                catch (CheckmateException ex)
                 {
                     sb.Append("\r\n\r\nCHECKMATE!");
-                    jj = 250;
+                    jj = maxMoves;
                 }
                 //isMax = !isMax;
 
@@ -92,17 +102,14 @@ namespace Chess
 
                 turn++;
             }
+            textBox3.Text += "\r\n" + g.ToFENString() ;
         }
 
         public Move MinMaxRoot(int depth, Game g, bool IsMaximizingPlayer)
         {
+
             List<Move> moves = g.GetMoves();
-            if (moves.Count==0)
-            {
 
-                throw new Exception();
-
-            }
             moves.Shuffle();
             double bestMove = -9999;
             Random r = new Random();
@@ -111,20 +118,33 @@ namespace Chess
             string FENFEN = g.ToFENString();
             //foreach (Move move in moves)
             //{
-                List<Tuple<Move, double>> returnVal = moves.AsParallel().Select((move) =>
+            var exceptions = new ConcurrentQueue<Exception>();
+            ConcurrentBag<Tuple<Move, double>> resultVal = new ConcurrentBag<Tuple<Models.Move, double>>();
+            Parallel.ForEach(moves, (move) =>
             {
                 Game g2 = new Game(FENFEN);
                 g2.Move(move);
-
-                double value = MiniMax(depth - 1, g2, -10000, 10000, !IsMaximizingPlayer);
-
+                try
+                {
+                    double value = MiniMax(depth - 1, g2, -10000, 10000, !IsMaximizingPlayer);
+                    resultVal.Add(new Tuple<Move, double>(move, value));
+                }
+                catch (Exception w)
+                {
+                    exceptions.Enqueue(w);
+                }
                 g2.Undo();
 
 
-                return new Tuple<Move, double>(bestMoveFound, value);
-            }).ToList();
+            });
+            if (exceptions.Count > 0)
+            {
+                Exception ex;
+                exceptions.TryDequeue(out ex);
+                throw ex;
+            }
 
-            foreach (var moveTuple in returnVal)
+            foreach (Tuple<Move, double> moveTuple in resultVal)
             {
                 if (moveTuple.Item2 >= bestMove)
                 {

@@ -262,7 +262,7 @@ namespace Chess.Models
             {
                 //if (m.To==846 && m.From==837 && System.Diagnostics.Debugger.IsAttached)
                 //    System.Diagnostics.Debugger.Break();
-                kingChecked = false;
+                bool kingFutureChecked = false;
                 Move(m);
                 if (!_whiteToMove && Util.IsWhiteKing(m.To))
                 {
@@ -279,23 +279,29 @@ namespace Chess.Models
                     currentBoard[x + (8 * y)] = piece;
 
                 }
-     
-                foreach (short piece in enemyPieces)
+
+                foreach (short piece in _positions.Where(e => _whiteToMove == Util.IsWhite(e)).ToList())
                 {
 
                     if (KingCheckFinder.IsKingChecked(currentKingPiece, MoveGenerator.GenerateMovesForPiece2(piece, currentBoard.ToList())))
                     {
-                        kingChecked = true;
+                        kingFutureChecked = true;
                     }
                 }
                 Undo();
-                if (!kingChecked)
+                if (!kingFutureChecked)
                 {
                     nonCheckingMoves.Add(m);
                 }
 
             }
-
+            if (nonCheckingMoves.Count == 0)
+            {
+                if (kingChecked)
+                    throw new CheckmateException();
+                else
+                    throw new StalemateException();
+            }
             return nonCheckingMoves;
             //var checkLocks=KingCheckFinder.FindCheckLocks(currentKingPiece, occupationList, returnMoves);
 
@@ -412,11 +418,12 @@ namespace Chess.Models
             }
             int count = 0;
             StringBuilder sb = new StringBuilder();
+            StringBuilder sbRow = new StringBuilder();
             //we have to re-reverse the result for text-box
             int skipGrabber = 0;
             foreach (string p in resultArr.Reverse())
             {
-                if (count % 8 == 0)
+                if (count % 8 == 0 && count>0)
                 {
                     sb.Append("/");
                 }
@@ -424,10 +431,10 @@ namespace Chess.Models
                 {
                     if (skipGrabber != 0)
                     {
-                        sb.Append(skipGrabber);
+                        sbRow.Append(skipGrabber);
                         skipGrabber = 0;
                     }
-                    sb.Append(p);
+                    sbRow.Append(p);
                 }
                 else
                 {
@@ -439,9 +446,15 @@ namespace Chess.Models
                 {
                     if (skipGrabber != 0)
                     {
-                        sb.Append(skipGrabber);
+                        sbRow.Append(skipGrabber);
                         skipGrabber = 0;
                     }
+                }
+                if (count % 8 == 0)
+                {
+                    string ss = new string(sbRow.ToString().Reverse().ToArray());
+                    sb.Append(ss);
+                    sbRow.Clear();
                 }
             }
 
