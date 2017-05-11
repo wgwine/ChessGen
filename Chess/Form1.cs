@@ -137,7 +137,7 @@ namespace Chess
 
 
             });
-            if (exceptions.Count > 0)
+            if (exceptions.Count > 0 && resultVal.Count==0)
             {
                 Exception ex;
                 exceptions.TryDequeue(out ex);
@@ -168,7 +168,7 @@ namespace Chess
             //{
             //    moves.Shuffle();
             //}
-                if (IsMaximizingPlayer)
+            if (IsMaximizingPlayer)
             {
                 double bestMove = -9999;
                 foreach (Move move in moves)
