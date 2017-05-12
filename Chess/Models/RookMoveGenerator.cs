@@ -9,84 +9,102 @@ namespace Chess.Models
     public static class RookMoveGenerator
     {
 
-        public static List<short> PossiblePositions(short piece, List<short> board)
+        public static List<int> PossiblePositions(int piece, int[] board)
         {
             bool isWhite = Util.IsWhite(piece);
-            List<short> result = new List<short>();
-            short position = Util.GetPieceOffset(piece);
-            short unpositionedPiece = (short)(piece - position);
-            short R = (short)(Util.GetYForPosition(position) * 8);
+            List<int> result = new List<int>();
+            int position = Util.GetPieceOffset(piece);
+            int unpositionedPiece = (piece - position);
+            int R = (Util.GetYForPosition(position) * 8);
 
-            short posX = Util.GetXForPosition(position);
-            short posY = Util.GetYForPosition(position);
+            int posX = Util.GetXForPosition(position);
+            int posY = Util.GetYForPosition(position);
             bool stopA = false, stopB = false, stopC = false, stopD = false;
-
+            int x, y, v;
             //expand out from piece position
             for (int i = 1; i < 8; i++)
             {
-                short a = (short)(position + (8 * i));//up
-                short b = (short)(position - (8 * i));//down
-                short c = (short)(position + (i));//right
-                short d = (short)(position - (i));//left
 
-                if (Util.GetXForPosition(a) == posX && Util.GetYForPosition(a) < 8 && !stopA)
+                if (!stopA)
                 {
-                    var newPos = (short)(unpositionedPiece + a);
-                    if (board[a] > 0)
+                    v = (position + (8 * i));//up
+                    x = Util.GetXForPosition(v);
+                    y = Util.GetYForPosition(v);
+                    if (x == posX && y < 8 && !stopA)
                     {
-                        stopA = true;
-                        if (Util.IsWhite(board[a]) != isWhite)
-                            result.Add((short)(unpositionedPiece + a));
-                    }
-                    else
-                    {
-                        result.Add((short)(unpositionedPiece + a));
+                        if (board[v] > 0)
+                        {
+                            stopA = true;
+                            if (Util.IsWhite(board[v]) != isWhite)
+                                result.Add((unpositionedPiece + v));
+                        }
+                        else
+                        {
+                            result.Add((unpositionedPiece + v));
+                        }
                     }
                 }
-                if (Util.GetXForPosition(b) == posX && Util.GetYForPosition(b) >=0 && !stopB)
+
+                if (!stopB)
                 {
-                    var newPos = (short)(unpositionedPiece + b);
-                    if (board[b] > 0)
+                    v = (position - (8 * i));//down
+                    x = Util.GetXForPosition(v);
+                    y = Util.GetYForPosition(v);
+
+                    if (x == posX && y >= 0)
                     {
-                        stopB = true;
-                        if (Util.IsWhite(board[b]) != isWhite)
-                            result.Add((short)(unpositionedPiece + b));
-                    }
-                    else
-                    {
-                        result.Add((short)(unpositionedPiece + b));
+                        var newPos = (unpositionedPiece + v);
+                        if (board[v] > 0)
+                        {
+                            stopB = true;
+                            if (Util.IsWhite(board[v]) != isWhite)
+                                result.Add((unpositionedPiece + v));
+                        }
+                        else
+                        {
+                            result.Add((unpositionedPiece + v));
+                        }
                     }
                 }
-                if (Util.GetYForPosition(c) == posY && Util.GetXForPosition(c) < 8 && !stopC)
+                if (!stopC)
                 {
-                    var newPos = (short)(unpositionedPiece + c);
-                    if (board[c] > 0)
+                    v = (position + (i));//right
+                    x = Util.GetXForPosition(v);
+                    y = Util.GetYForPosition(v);
+                    if (y == posY && x < 8)
                     {
-                        stopC = true;
-                        if (Util.IsWhite(board[c]) != isWhite)
-                            result.Add((short)(unpositionedPiece + c));
-                    }
-                    else
-                    {
-                        result.Add((short)(unpositionedPiece + c));
+                        if (board[v] > 0)
+                        {
+                            stopC = true;
+                            if (Util.IsWhite(board[v]) != isWhite)
+                                result.Add((unpositionedPiece + v));
+                        }
+                        else
+                        {
+                            result.Add((unpositionedPiece + v));
+                        }
                     }
                 }
-                if (Util.GetYForPosition(d) == posY && Util.GetXForPosition(d) >= 0  && !stopD)
+                if (!stopD)
                 {
-                    var newPos = (short)(unpositionedPiece + d);
-                    if (board[d] > 0)
+                    v = (position - (i));//left
+                    x = Util.GetXForPosition(v);
+                    y = Util.GetYForPosition(v);
+                    if (y == posY && x >= 0)
                     {
-                        stopD = true;
-                        if (Util.IsWhite(board[d]) != isWhite)
-                            result.Add((short)(unpositionedPiece + d));
-                    }
-                    else
-                    {
-                        result.Add((short)(unpositionedPiece + d));
+                        if (board[v] > 0)
+                        {
+                            stopD = true;
+                            if (Util.IsWhite(board[v]) != isWhite)
+                                result.Add((unpositionedPiece + v));
+                        }
+                        else
+                        {
+                            result.Add((unpositionedPiece + v));
+                        }
                     }
                 }
             }
-
             return result;
         }
     }

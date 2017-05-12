@@ -8,10 +8,10 @@ namespace Chess.Models
 {
     public static class MoveGenerator
     {
-        public static List<Move> GenerateMovesForPiece(short piece, List<short> board)
+        public static List<Move> GenerateMovesForPiece(int piece, int[] board)
         {
             PieceType pt = Util.GetPieceType(piece);
-            List<short> temp = new List<short>();
+            List<int> temp = new List<int>();
             List<Move> result = new List<Move>();
             switch (pt)
             {
@@ -38,7 +38,7 @@ namespace Chess.Models
 
             }
 
-            foreach (short m in temp)
+            foreach (int m in temp)
             {
                 result.Add(new Move(piece, m));
             }

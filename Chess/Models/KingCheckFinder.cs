@@ -8,7 +8,7 @@ namespace Chess.Models
 {
     public static class KingCheckFinder
     {
-        public static bool IsKingChecked(short currentKingPosition, List<Move> enemyMoves)
+        public static bool IsKingChecked(int currentKingPosition, List<Move> enemyMoves)
         {
             foreach (Move m in enemyMoves)
             {
@@ -20,44 +20,44 @@ namespace Chess.Models
 
             return false;
         }
-        public static List<short> FindCheckLocks(short currentKing, List<short> board, List<Move> moves) 
+        public static List<int> FindCheckLocks(int currentKing, List<int> board, List<Move> moves) 
         {
 
-            List<short> result = new List<short>();
+            List<int> result = new List<int>();
             int colorMatch = Util.IsWhite(currentKing) ? 1 : 2;
             bool isWhite = Util.IsWhite(currentKing);
-            short position = Util.GetPieceOffset(currentKing);
-            short unpositionedPiece = Util.DepositionPiece(currentKing);
-            short kingX = Util.GetXForPosition(position);
-            short kingY = Util.GetXForPosition(position);
-            Dictionary<string, List<short>> myDiagonals = new Dictionary<string, List<short>>() {
-                { "UR", new List<short>() },
-                { "DL", new List<short>() },
-                { "UL", new List<short>() },
-                { "DR", new List<short>() }
+            int position = Util.GetPieceOffset(currentKing);
+            int unpositionedPiece = Util.DepositionPiece(currentKing);
+            int kingX = Util.GetXForPosition(position);
+            int kingY = Util.GetXForPosition(position);
+            Dictionary<string, List<int>> myDiagonals = new Dictionary<string, List<int>>() {
+                { "UR", new List<int>() },
+                { "DL", new List<int>() },
+                { "UL", new List<int>() },
+                { "DR", new List<int>() }
             };
-            Dictionary<string, List<short>> checkBlockableSquares = new Dictionary<string, List<short>>() {
-                { "UR", new List<short>() },
-                { "DL", new List<short>() },
-                { "UL", new List<short>() },
-                { "DR", new List<short>() }
+            Dictionary<string, List<int>> checkBlockableSquares = new Dictionary<string, List<int>>() {
+                { "UR", new List<int>() },
+                { "DL", new List<int>() },
+                { "UL", new List<int>() },
+                { "DR", new List<int>() }
             };
             //bool isInCheck = IsKingChecked(currentKing, board,moves);
             bool stopA = false, stopB = false, stopC = false, stopD = false;
-            for (short i = 1; i < 8; i++)
+            for (int i = 1; i < 8; i++)
             {
 
-                short a = (short)(position + (9 * i));//up right
-                short b = (short)(position - (9 * i));//down left
-                short c = (short)(position + (7 * i));//up left
-                short d = (short)(position - (7 * i));//down right
+                int a = (position + (9 * i));//up right
+                int b = (position - (9 * i));//down left
+                int c = (position + (7 * i));//up left
+                int d = (position - (7 * i));//down right
                 //prevent wrapping
 
-                short x = Util.GetXForPosition(a);
-                short y = Util.GetYForPosition(a);
+                int x = Util.GetXForPosition(a);
+                int y = Util.GetYForPosition(a);
                 if (x > kingX && x < 8 && y < 8 && !stopA)
                 {
-                    var newPos = (short)(unpositionedPiece + a);
+                    var newPos = (unpositionedPiece + a);
                     checkBlockableSquares["UR"].Add(newPos);
                     //if there is a friendly piece on this diagonal
                     if (board[a] > 0 && Util.IsWhite(board[a]) == isWhite)
@@ -99,43 +99,43 @@ namespace Chess.Models
 
                 if (Util.GetXForPosition(b) < kingX && Util.GetXForPosition(b) >= 0 && Util.GetYForPosition(b) >= 0)
                 {
-                    var newPos = (short)(unpositionedPiece + b);
+                    var newPos = (unpositionedPiece + b);
                     if (board[b] > 0)
                     {
                         if (board[b] != colorMatch)
-                            result.Add((short)(unpositionedPiece + b));
+                            result.Add((unpositionedPiece + b));
                     }
                     else
                     {
-                        result.Add((short)(unpositionedPiece + b));
+                        result.Add((unpositionedPiece + b));
                     }
                 }
 
                 if (Util.GetXForPosition(c) < kingX && Util.GetXForPosition(c) >= 0 && Util.GetYForPosition(c) < 8)
                 {
-                    var newPos = (short)(unpositionedPiece + c);
+                    var newPos = (unpositionedPiece + c);
                     if (board[c] > 0)
                     {
                         if (board[c] != colorMatch)
-                            result.Add((short)(unpositionedPiece + c));
+                            result.Add((unpositionedPiece + c));
                     }
                     else
                     {
-                        result.Add((short)(unpositionedPiece + c));
+                        result.Add((unpositionedPiece + c));
                     }
                 }
 
                 if (Util.GetXForPosition(d) > kingX && Util.GetXForPosition(d) < 8 && Util.GetYForPosition(d) >= 0)
                 {
-                    var newPos = (short)(unpositionedPiece + d);
+                    var newPos = (unpositionedPiece + d);
                     if (board[d] > 0)
                     {
                         if (board[d] != colorMatch)
-                            result.Add((short)(unpositionedPiece + d));
+                            result.Add((unpositionedPiece + d));
                     }
                     else
                     {
-                        result.Add((short)(unpositionedPiece + d));
+                        result.Add((unpositionedPiece + d));
                     }
                 }
             }

@@ -73,15 +73,16 @@ namespace Chess.Models
         double[][] bishopEvalWhite;
         double[][] rookEvalWhite;
         double[][] kingEvalWhite;
-        private List<short> _positions;
+        private List<int> _positions;
+        private int[] _theBoard;
         private bool _whiteOOCastle = true;
         private bool _whiteOOOCastle = true;
         private bool _blackOOCastle = true;
         private bool _blackOOOCastle = true;
         private bool _whiteToMove = true;
-        private short? enPassantSquare; short whiteKing = 0, blackKing = 0, currentKingPiece;
+        private int? enPassantSquare; int whiteKing = 0, blackKing = 0, currentKingPiece;
         public Stack<Move> history;
-        public List<short> Positions
+        public List<int> Positions
         {
             get { return _positions; }
         }
@@ -124,7 +125,7 @@ namespace Chess.Models
         public Game()
         {
             history = new Stack<Move>();
-            _positions = new short[32]{
+            _positions = new int[32]{
                 704,577,642,771,836,645,582,711,    //white royal
                 520,521,522,523,524,525,526,527,    //white pawns
                 48,49,50,51,52,53,54,55,            //black pawns
@@ -134,18 +135,19 @@ namespace Chess.Models
         }
         public Game(string fen)
         {
+            _theBoard = new int[64];
             history = new Stack<Move>();
             bishopEvalWhite = bishopEvalBlack.Reverse().ToArray();
             pawnEvalWhite = pawnEvalBlack.Reverse().ToArray();
             rookEvalWhite = rookEvalBlack.Reverse().ToArray();
-            kingEvalWhite= kingEvalBlack.Reverse().ToArray();
+            kingEvalWhite = kingEvalBlack.Reverse().ToArray();
             //split the sections of the FEN string with spaces
             string[] fenParts = fen.Trim().Split(' ');
 
             //first part is for piece positions
             if (fenParts.Length > 0)
             {
-                short[] positions = new short[64];
+                int[] positions = new int[64];
                 int index = 0;
                 //rows are delimited by /
                 //Row order reversed because the convention I am using is bottom-left=0,0, but FEN starts with rank 8 for some stupid reason
@@ -168,11 +170,12 @@ namespace Chess.Models
                         }
                         else
                         {
-                            positions[index] = (short)(PieceTypeFENMap.PieceValue(row[x]) + index);
+                            positions[index] = (PieceTypeFENMap.PieceValue(row[x]) + index);
                             index++;
                         }
                     }
                 }
+                _theBoard = positions;
                 _positions = positions.Where(e => e != 0).ToList();
             }
             if (fenParts.Length > 1)
@@ -205,23 +208,23 @@ namespace Chess.Models
             {
                 //file + (8 * rank)
                 //ascii offset -'1' instead of -'0' because FEN is 1 indexed instead of 0 indexed
-                enPassantSquare = (short)(Util.FileToShort(fenParts[3][0]) + (8 * (fenParts[3][1] - '1')));
+                enPassantSquare = (Util.FileToInt(fenParts[3][0]) + (8 * (fenParts[3][1] - '1')));
             }
         }
         public MoveGenerationResult GetMoves()
         {
             MoveGenerationResult result = new MoveGenerationResult();
             List<Move> returnMoves = new List<Move>();
-            short[] occupationBoard = new short[8 * 8];
-            short[] currentBoard;
-            List<short> boardList = new List<short>();
+            int[] occupationBoard = new int[8 * 8];
+            int[] currentBoard;
+            List<int> boardList = new List<int>();
             List<Move> nonCheckingMoves = new List<Move>();
-            List<short> myPieces = _positions.Where(e => _whiteToMove == Util.IsWhite(e)).ToList();
-            List<short> enemyPieces = _positions.Where(e => _whiteToMove == !Util.IsWhite(e)).ToList();
+            List<int> myPieces = _positions.Where(e => _whiteToMove == Util.IsWhite(e)).ToList();
+            List<int> enemyPieces = _positions.Where(e => _whiteToMove == !Util.IsWhite(e)).ToList();
             bool kingChecked = false;
-
+            int currentKingPosition;
             //this can maybe be offloaded into move()
-            foreach (short piece in _positions)
+            foreach (int piece in _positions)
             {
                 if (_whiteToMove && Util.IsWhiteKing(piece))
                 {
@@ -233,36 +236,41 @@ namespace Chess.Models
                 }
                 occupationBoard[Util.GetPieceOffset(piece)] = piece;
             }
+            currentKingPosition = Util.GetPieceOffset(currentKingPiece);
 
-            List<short> occupationList = occupationBoard.ToList();
-            
+            List<int> occupationList = occupationBoard.ToList();
+            Dictionary<int, List<Move>> enemyMovements = new Dictionary<int, List<Models.Move>>();
+
+            List<Move> tempList;
             //see if king is currently in check. If yes and no moves are generated it is checkmate. If no and no moves generated it is stalemate
-            foreach (short piece in enemyPieces)
+            foreach (int piece in enemyPieces)
             {
-                if (KingCheckFinder.IsKingChecked(currentKingPiece, MoveGenerator.GenerateMovesForPiece(piece, occupationList)))
+                enemyMovements.Add(piece, MoveGenerator.GenerateMovesForPiece(piece, _theBoard));
+                bool checkit = enemyMovements.TryGetValue(piece, out tempList);
+                if (checkit && KingCheckFinder.IsKingChecked(currentKingPosition, tempList))
                 {
                     kingChecked = true;
                 }
             }
 
-            foreach (short piece in myPieces)
+            foreach (int piece in myPieces)
             {
-                returnMoves.AddRange(MoveGenerator.GenerateMovesForPiece(piece, occupationList));
+                returnMoves.AddRange(MoveGenerator.GenerateMovesForPiece(piece, _theBoard));
             }
 
             //if I am in check, I can only return moves that resolve it, as well as moves that dont cause check
             foreach (Move m in returnMoves)
             {
-                currentBoard = new short[8 * 8];
+                currentBoard = new int[8 * 8];
                 bool kingFutureChecked = false;
 
-                Move(m);
+                Move maybeCapturedEnemy = Move(m);
 
                 //probably less operations if I just maintain the 8x8 board
-                foreach (short piece in _positions)
+                foreach (int piece in _positions)
                 {
-                    short x = Util.GetXForPiece(piece);
-                    short y = Util.GetYForPiece(piece);
+                    int x = Util.GetXForPiece(piece);
+                    int y = Util.GetYForPiece(piece);
                     currentBoard[x + (8 * y)] = piece;
                     if (!_whiteToMove && Util.IsWhiteKing(piece))
                     {
@@ -273,15 +281,18 @@ namespace Chess.Models
                         currentKingPiece = piece;
                     }
                 }
-                boardList = currentBoard.ToList();
-                short currentKingPosition = Util.GetPieceOffset(currentKingPiece);
+
+                currentKingPosition = Util.GetPieceOffset(currentKingPiece);
                 //its not my turn right now because of move(), so this linq returns my enemies
-                foreach (short piece in _positions.Where(e => _whiteToMove == Util.IsWhite(e)).ToList())
+                foreach (int piece in _positions.Where(e => _whiteToMove == Util.IsWhite(e)))
                 {
-                    if (KingCheckFinder.IsKingChecked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, boardList)))
+
+                    if (KingCheckFinder.IsKingChecked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
                     {
                         kingFutureChecked = true;
+                        break;
                     }
+
                 }
                 Undo();
                 if (!kingFutureChecked)
@@ -310,11 +321,11 @@ namespace Chess.Models
             //{
             //    return 0;
             //}
-            foreach (short piece in _positions)
+            foreach (int piece in _theBoard.Where(e => e > 0))
             {
                 char pN = Util.GetPieceName(piece);
-                short x = Util.GetXForPiece(piece);
-                short y = Util.GetYForPiece(piece);
+                int x = Util.GetXForPiece(piece);
+                int y = Util.GetYForPiece(piece);
                 switch (pN)
                 {
                     case 'P':
@@ -342,13 +353,13 @@ namespace Chess.Models
                         value -= 30 + knightEval[y][x];
                         break;
                     case 'Q':
-                        value += 90+ queenEval[y][x];
+                        value += 90 + queenEval[y][x];
                         break;
                     case 'q':
                         value -= 90 + queenEval[y][x];
                         break;
                     case 'K':
-                        value += 900+ kingEvalWhite[y][x];
+                        value += 900 + kingEvalWhite[y][x];
                         break;
                     case 'k':
                         value -= 900 + kingEvalBlack[y][x];
@@ -363,26 +374,22 @@ namespace Chess.Models
         }
         public Move Move(Move m)
         {
-            bool isWhite = Util.IsWhite(m.From);
+            bool isWhiteMoving = Util.IsWhite(m.From);
+            int fromOffset = Util.GetPieceOffset(m.From);
+            int toOffset = Util.GetPieceOffset(m.To);
 
-            short newOffset = Util.GetPieceOffset(m.To);
-            short capturedPiece = -1;
-            foreach (short piece in _positions)
+
+            _theBoard[fromOffset] = 0;
+            if (_theBoard[toOffset] > 0 && Util.IsWhite(_theBoard[toOffset]) != isWhiteMoving)
             {
                 //check for captures and then record in history item, allows for undo
-                if (newOffset == Util.GetPieceOffset(piece) && Util.IsWhite(piece) != isWhite)
-                {
-                    m.Captured = piece;
-                }
+                m.Captured = _theBoard[toOffset];
             }
-            if (m.Captured.HasValue)
-            {
-                _positions.Remove(m.Captured.Value);
-            }
+            _theBoard[toOffset] = m.To;
+
             _whiteToMove = !_whiteToMove;
-            _positions.Remove(m.From);
-            _positions.Add(m.To);
             history.Push(m);
+            _positions = _theBoard.Where(e => e > 0).ToList();
             return history.Peek();
 
         }
@@ -391,15 +398,18 @@ namespace Chess.Models
             if (history.Count > 0)
             {
                 Move move = history.Pop();
+                int fromOffset = Util.GetPieceOffset(move.From);
+                int toOffset = Util.GetPieceOffset(move.To);
 
-                _positions.Remove(move.To);
-                _positions.Add(move.From);
+                _theBoard[fromOffset] = move.From;
+
+                _theBoard[toOffset] = 0;
                 if (move.Captured.HasValue)
                 {
-                    _positions.Add(move.Captured.Value);
+                    _theBoard[toOffset] = move.Captured.Value;
                 }
                 _whiteToMove = !_whiteToMove;
-
+                _positions = _theBoard.Where(e => e > 0).ToList();
             }
         }
         public string ToFENString()
@@ -407,7 +417,7 @@ namespace Chess.Models
             string result = "";
 
             string[] resultArr = new string[8 * 8];
-            foreach (short piece in _positions)
+            foreach (int piece in _theBoard.Where(e => e > 0))
             {
                 resultArr[Util.GetPieceOffset(piece)] = PieceTypeFENMap.PieceName(piece).ToString();
             }
@@ -418,7 +428,7 @@ namespace Chess.Models
             int skipGrabber = 0;
             foreach (string p in resultArr.Reverse())
             {
-                if (count % 8 == 0 && count>0)
+                if (count % 8 == 0 && count > 0)
                 {
                     sb.Append("/");
                 }
@@ -494,7 +504,7 @@ namespace Chess.Models
             if (enPassantSquare.HasValue)
             {
                 sb.Append(" ");
-                sb.Append(Util.ShortToFile(Util.GetXForPosition((byte)enPassantSquare.Value)));
+                sb.Append(Util.IntToFile(Util.GetXForPosition((byte)enPassantSquare.Value)));
                 sb.Append(Util.GetYForPosition((byte)enPassantSquare.Value) + 1);
             }
             else
@@ -513,7 +523,7 @@ namespace Chess.Models
 
             int rowCount = 0;
             int rowIndex = 0;
-            foreach (short piece in _positions)
+            foreach (int piece in _theBoard.Where(e => e > 0))
             {
 
 

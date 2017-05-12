@@ -10,7 +10,7 @@ namespace Chess.Models
         {
             return valueMap[Char.ToLower(v)] + (Char.IsUpper(v)? 512 : 0);
         }
-        public static char PieceName(short v)
+        public static char PieceName(int v)
         {
             return Util.GetPieceName(v);
         }

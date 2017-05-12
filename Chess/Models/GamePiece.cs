@@ -8,21 +8,21 @@ namespace Chess.Models
 {
     public abstract class GamePiece
     {
-        short m_Piece;
+        int m_Piece;
         PieceType m_pieceType;
-        short m_position;
+        int m_position;
         bool m_isWhite;
         public GamePiece()
         {
         }
-        public GamePiece(short piece)
+        public GamePiece(int piece)
         {
             m_Piece = piece;
             m_pieceType = Util.GetPieceType(piece);
             m_position = Util.GetPieceOffset(piece);
             m_isWhite = Util.GetBitAtPosition(piece, 9);
         }
-        public short Position
+        public int Position
         {
             get
             {

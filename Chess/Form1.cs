@@ -42,7 +42,7 @@ namespace Chess
             {
                 try
                 {
-                    Move bestMove = MinMaxRoot(isSucky?2:3, g, isMax);
+                    Move bestMove = MinMaxRoot(3, g, isMax);
                     if (bestMove==null)
                     {
 
@@ -51,7 +51,7 @@ namespace Chess
                     }
                     bestMove=g.Move(bestMove);
                     string name = Util.GetPieceName(bestMove.From).ToString();
-                    string fileTo = Util.ShortToFile(Util.GetXForPiece(bestMove.To)).ToString();
+                    string fileTo = Util.IntToFile(Util.GetXForPiece(bestMove.To)).ToString();
                     string rankTo = (Util.GetYForPiece(bestMove.To) + 1).ToString();
                     string move = string.Format("{3} From:{0}, To:{1}({4},{5}), Capturing:{2}, Value:{6}\r\n", bestMove.From, bestMove.To, bestMove.Captured, name, fileTo, rankTo, g.BoardValue());
                     sb.Append(move);
@@ -84,8 +84,8 @@ namespace Chess
             foreach(Move m in g.history.Reverse())
             {
                 string name = Util.GetPieceProperName(m.From).ToString();
-                string fileTo = Util.ShortToFile(Util.GetXForPiece(m.To)).ToString();
-                string fileFrom = Util.ShortToFile(Util.GetXForPiece(m.From)).ToString();
+                string fileTo = Util.IntToFile(Util.GetXForPiece(m.To)).ToString();
+                string fileFrom = Util.IntToFile(Util.GetXForPiece(m.From)).ToString();
                 string rankTo = (Util.GetYForPiece(m.To) + 1).ToString();
                 string rankFrom = (Util.GetYForPiece(m.From) + 1).ToString();
                 string cap = m.Captured.HasValue ? "x" : "";
@@ -171,7 +171,7 @@ namespace Chess
             MoveGenerationResult result = g.GetMoves();
             //if (depth == 1)
             //{
-            //    moves.Shuffle();
+            //    result.Moves.Shuffle();
             //}
             if (IsMaximizingPlayer)
             {
@@ -218,7 +218,7 @@ namespace Chess
             foreach(Move m in result.Moves)
             {
                 string name = Util.GetPieceName(m.From).ToString();
-                string fileTo = Util.ShortToFile(Util.GetXForPiece(m.To)).ToString();
+                string fileTo = Util.IntToFile(Util.GetXForPiece(m.To)).ToString();
                 string rankTo = (Util.GetYForPiece(m.To) + 1).ToString();
                 string move = string.Format("{2} From:{0}, To:{1}({3},{4})\r\n", m.From, m.To, name, fileTo, rankTo);
                 sb.Append(move);

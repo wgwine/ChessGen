@@ -5,68 +5,67 @@ namespace Chess.Models
 {
     public static class KingMoveGenerator
     {
-        public static List<short> PossiblePositions(short piece, List<short> board)
+        public static List<int> PossiblePositions(int piece, int[] board)
         {
             bool isWhite = Util.IsWhite(piece);
-            List<short> tempResult = new List<short>();
-            List<short> result = new List<short>();
+            List<int> tempResult = new List<int>();
+            List<int> result = new List<int>();
 
-            short position = Util.GetPieceOffset(piece);
-            short depositionedPiece =(short)(piece - position);
-            short positionX = Util.GetXForPosition(position);
-            short positionY = Util.GetYForPosition(position);
+            int position = Util.GetPieceOffset(piece);
+            int depositionedPiece =(piece - position);
+            int positionX = Util.GetXForPosition(position);
+            int positionY = Util.GetYForPosition(position);
 
             if (positionX < 7)
             {
                 //right
-                tempResult.Add((short)(position + 1));
+                tempResult.Add(position + 1);
 
                 if (positionY < 7)
                 {
                     //up right
-                    tempResult.Add((short)(position + 9));
+                    tempResult.Add(position + 9);
                 }
                 if (positionY > 0)
                 {
                     //down right
-                    tempResult.Add((short)(position - 7));
+                    tempResult.Add(position - 7);
                 }
             }
 
             if (positionX > 0)
             {
                 //left
-                tempResult.Add((short)(position - 1));
+                tempResult.Add(position - 1);
 
                 if (positionY < 7)
                 {
                     //up left
-                    tempResult.Add((short)(position + 7));
+                    tempResult.Add(position + 7);
                 }
                 if (positionY > 0)
                 {
                     //down left
-                    tempResult.Add((short)(position - 9));
+                    tempResult.Add(position - 9);
                 }
             }
 
             if (positionY <7)
             {
                 //up
-                tempResult.Add((short)(position + 8));
+                tempResult.Add(position + 8);
             }
 
             if (positionY > 0)
             {
                 //down
-                tempResult.Add((short)(position - 8));
+                tempResult.Add(position - 8);
             }
-            foreach(short move in tempResult)
+            foreach(int move in tempResult)
             {
-                short offset = Util.GetPieceOffset(move);
-                if (board[move] == 0 || (board[offset] > 0 && Util.IsWhite(board[offset]) != isWhite))
+                if (board[move] == 0 || (board[move] > 0 && Util.IsWhite(board[move]) != isWhite))
                 {
-                    result.Add((short)(move + depositionedPiece));
+                    result.Add((move + depositionedPiece));
                 }
             }
             return result;

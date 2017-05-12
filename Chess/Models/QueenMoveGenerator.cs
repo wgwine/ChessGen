@@ -5,9 +5,9 @@ namespace Chess.Models
 {
     public static class QueenMoveGenerator 
     {
-        public static List<short> PossiblePositions(short piece, List<short> board)
+        public static List<int> PossiblePositions(int piece, int[] board)
         {
-            List<short> result = BishopMoveGenerator.PossiblePositions(piece, board);
+            List<int> result = BishopMoveGenerator.PossiblePositions(piece, board);
             result.AddRange(RookMoveGenerator.PossiblePositions(piece, board));
             return result;
         }

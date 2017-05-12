@@ -9,22 +9,22 @@ namespace Chess.Models
 
     public interface IMoveGenerator
     {
-        List<short> PossiblePositions(short piece);
+        List<int> PossiblePositions(int piece);
     }
     public static class PawnMoveGenerator
     {
-        public static List<short> PossiblePositions(short piece, List<short> board)
+        public static List<int> PossiblePositions(int piece, int[] board)
         {
             bool isWhite = Util.IsWhite(piece);
-            List<short> tempResult = new List<short>();
-            List<short> result = new List<short>();
-            short position = Util.GetPieceOffset(piece);
-            short depositionedPiece = Util.DepositionPiece(piece);
-            short positionX = Util.GetXForPosition(position);
-            short positionY = Util.GetYForPosition(position);
-            short standardMoveOffset = isWhite ? (short)8 : (short)-8;
-            short captureOffset1 = isWhite ? (short)7 : (short)-7;
-            short captureOffset2 = isWhite ? (short)9 : (short)-9;
+            List<int> tempResult = new List<int>();
+            List<int> result = new List<int>();
+            int position = Util.GetPieceOffset(piece);
+            int depositionedPiece = Util.DepositionPiece(piece);
+            int positionX = Util.GetXForPosition(position);
+            int positionY = Util.GetYForPosition(position);
+            int standardMoveOffset = isWhite ? 8 : -8;
+            int captureOffset1 = isWhite ? 7 : -7;
+            int captureOffset2 = isWhite ? 9 : -9;
             //if white
             if (isWhite)
             {
@@ -32,17 +32,17 @@ namespace Chess.Models
                 {
                     if (board[position + standardMoveOffset] == 0)
                     {
-                        tempResult.Add((short)(position + standardMoveOffset));
+                        tempResult.Add((position + standardMoveOffset));
                     }
                     //captures
                     if (positionX > 0 && board[position + captureOffset1] > 0 && Util.IsWhite(board[position + captureOffset1]) != isWhite)
                     {
-                        tempResult.Add((short)(position + captureOffset1));
+                        tempResult.Add((position + captureOffset1));
                     }
 
                     if (positionX < 7 && board[position + captureOffset2] > 0 && Util.IsWhite(board[position + captureOffset2]) != isWhite)
                     {
-                        tempResult.Add((short)(position + captureOffset2));
+                        tempResult.Add((position + captureOffset2));
                     }
 
 
@@ -50,7 +50,7 @@ namespace Chess.Models
                     {
                         if (board[position + standardMoveOffset] == 0 && board[position + (2 * standardMoveOffset)] == 0)
                         {
-                            tempResult.Add((short)(position + (2 * standardMoveOffset)));
+                            tempResult.Add((position + (2 * standardMoveOffset)));
                         }
                     }
                 }
@@ -58,13 +58,13 @@ namespace Chess.Models
                 {
                     //pawn promotion
                     if (board[position + standardMoveOffset] == 0)
-                        result.Add((short)(PieceTypeFENMap.PieceValue('Q') + position + standardMoveOffset));
+                        result.Add((PieceTypeFENMap.PieceValue('Q') + position + standardMoveOffset));
 
                     if (positionX > 0 && board[position + captureOffset1] > 0 && Util.IsWhite(board[position + captureOffset1]) != isWhite)
-                        result.Add((short)(PieceTypeFENMap.PieceValue('Q') + position + captureOffset1));
+                        result.Add((PieceTypeFENMap.PieceValue('Q') + position + captureOffset1));
 
                     if (positionX < 7 && board[position + captureOffset2] > 0 && Util.IsWhite(board[position + captureOffset2]) != isWhite)
-                        result.Add((short)(PieceTypeFENMap.PieceValue('Q') + position + captureOffset2));
+                        result.Add((PieceTypeFENMap.PieceValue('Q') + position + captureOffset2));
                 }
             }
             else
@@ -72,45 +72,45 @@ namespace Chess.Models
                 if (positionY > 1)
                 {
                     if (board[position + standardMoveOffset] == 0)
-                        tempResult.Add((short)(position + standardMoveOffset));
+                        tempResult.Add((position + standardMoveOffset));
 
                     if (positionX <7 && board[position + captureOffset1] > 0 && Util.IsWhite(board[position + captureOffset1]) != isWhite)
-                        tempResult.Add((short)(position + captureOffset1));
+                        tempResult.Add((position + captureOffset1));
 
                     if (positionX > 0 && board[position + captureOffset2] > 0 && Util.IsWhite(board[position + captureOffset2]) != isWhite)
-                        tempResult.Add((short)(position + captureOffset2));
+                        tempResult.Add((position + captureOffset2));
 
                     if (positionY == 6)
                     {
                         if (board[position + standardMoveOffset] == 0 && board[position + (2 * standardMoveOffset)] == 0)
-                            tempResult.Add((short)(position + (2 * standardMoveOffset)));
+                            tempResult.Add((position + (2 * standardMoveOffset)));
                     }
                 }
                 else if (positionY == 1)
                 {
                     //pawn promotion
                     if (board[position + standardMoveOffset] == 0)
-                        result.Add((short)(PieceTypeFENMap.PieceValue('q') + position + standardMoveOffset));
+                        result.Add((PieceTypeFENMap.PieceValue('q') + position + standardMoveOffset));
 
                     if (positionX < 7 && board[position + captureOffset1] > 0 && Util.IsWhite(board[position + captureOffset1]) != isWhite)
-                        result.Add((short)(PieceTypeFENMap.PieceValue('q') + position + captureOffset1));
+                        result.Add((PieceTypeFENMap.PieceValue('q') + position + captureOffset1));
 
                     if (positionX > 0 && board[position + captureOffset2] > 0 && Util.IsWhite(board[position + captureOffset2]) != isWhite)
-                        result.Add((short)(PieceTypeFENMap.PieceValue('q') + position + captureOffset2));
+                        result.Add((PieceTypeFENMap.PieceValue('q') + position + captureOffset2));
                 }
             }
 
 
-            foreach (short newPosition in tempResult)
+            foreach (int newPosition in tempResult)
             {
-                //short temp = newPosition;
+                //int temp = newPosition;
                 //add check value to moves, wont be needed if look for checks on turn
                 //if(board[newPosition + captureOffset1] == opponentKing || board[newPosition + captureOffset2] == opponentKing)
                 //{
                 //    temp += 1024;
                 //}
 
-                result.Add((short)(newPosition | depositionedPiece));
+                result.Add((newPosition | depositionedPiece));
             }
 
             return result;

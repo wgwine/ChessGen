@@ -8,18 +8,18 @@ namespace Chess.Models
 {
     public class Move
     {
-        public short From;
-        public short To;
-        public short? Captured;
+        public int From;
+        public int To;
+        public int? Captured;
         public Move()
         {
         }
-        public Move(short from, short to)
+        public Move(int from, int to)
         {
             From = from;
             To = to;
         }
-        public Move(short from, short to, short captured)
+        public Move(int from, int to, int captured)
         {
             From = from;
             To = to;
