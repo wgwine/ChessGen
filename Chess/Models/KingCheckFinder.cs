@@ -8,17 +8,17 @@ namespace Chess.Models
 {
     public static class KingCheckFinder
     {
-        public static bool IsKingChecked(short currentKing, List<Move> enemyMoves)
+        public static bool IsKingChecked(short currentKingPosition, List<Move> enemyMoves)
         {
-            bool isChecked = false;
-            short position = Util.GetPieceOffset(currentKing);
             foreach (Move m in enemyMoves)
             {
-                if (Util.GetPieceOffset(m.To) == position)
-                    isChecked=true;
+                if (Util.GetPieceOffset(m.To) == currentKingPosition)
+                {
+                    return true;
+                }
             }
 
-            return isChecked;
+            return false;
         }
         public static List<short> FindCheckLocks(short currentKing, List<short> board, List<Move> moves) 
         {

@@ -18,7 +18,7 @@ namespace Chess.Models
             short R = (short)(Util.GetYForPosition(position) * 8);
 
             short posX = Util.GetXForPosition(position);
-            short posY = Util.GetXForPosition(position);
+            short posY = Util.GetYForPosition(position);
             bool stopA = false, stopB = false, stopC = false, stopD = false;
 
             //expand out from piece position

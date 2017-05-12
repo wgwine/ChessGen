@@ -99,8 +99,9 @@ namespace Chess
             return (short)(piece & 63);
         }
 
-        public static bool IsWhite(short piece) { 
-            return (piece & (1 << 9)) != 0;
+        public static bool IsWhite(short piece) {
+            //return ((piece >> 9) & 1) == 1;//use this if more bits than 512
+            return (piece >> 9) ==1;
         }
         public static PieceType GetPieceType(short piece)
         {

@@ -16,7 +16,6 @@ namespace Chess.Models
         public static List<short> PossiblePositions(short piece, List<short> board)
         {
             bool isWhite = Util.IsWhite(piece);
-            int colorMatch = isWhite ? 1 : 2;
             List<short> tempResult = new List<short>();
             List<short> result = new List<short>();
             short position = Util.GetPieceOffset(piece);
@@ -26,7 +25,6 @@ namespace Chess.Models
             short standardMoveOffset = isWhite ? (short)8 : (short)-8;
             short captureOffset1 = isWhite ? (short)7 : (short)-7;
             short captureOffset2 = isWhite ? (short)9 : (short)-9;
-            short opponentKing = (short)(isWhite ? 4 : 3);
             //if white
             if (isWhite)
             {
@@ -112,7 +110,7 @@ namespace Chess.Models
                 //    temp += 1024;
                 //}
 
-                result.Add((short)(newPosition + depositionedPiece));
+                result.Add((short)(newPosition & depositionedPiece));
             }
 
             return result;

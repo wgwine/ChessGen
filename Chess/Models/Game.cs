@@ -208,12 +208,17 @@ namespace Chess.Models
                 enPassantSquare = (short)(Util.FileToShort(fenParts[3][0]) + (8 * (fenParts[3][1] - '1')));
             }
         }
-        public List<Move> GetMoves()
+        public MoveGenerationResult GetMoves()
         {
+            MoveGenerationResult result = new MoveGenerationResult();
+            List<Move> returnMoves = new List<Move>();
             short[] occupationBoard = new short[8 * 8];
-
+            short[] currentBoard;
+            List<short> boardList = new List<short>();
+            List<Move> nonCheckingMoves = new List<Move>();
             List<short> myPieces = _positions.Where(e => _whiteToMove == Util.IsWhite(e)).ToList();
             List<short> enemyPieces = _positions.Where(e => _whiteToMove == !Util.IsWhite(e)).ToList();
+            bool kingChecked = false;
 
             //this can maybe be offloaded into move()
             foreach (short piece in _positions)
@@ -229,20 +234,12 @@ namespace Chess.Models
                 occupationBoard[Util.GetPieceOffset(piece)] = piece;
             }
 
-            List<Move> returnMoves = new List<Move>();
-
             List<short> occupationList = occupationBoard.ToList();
-            //returnVal = (_positions.AsParallel().Select(piece => new Tuple<short, List<short>>(piece, MoveGenerator.GenerateMovesForPiece(piece, occupationList)))).ToList();
-            bool kingChecked = false;
-            List<short> checkingPieces = new List<short>();
-            foreach (short piece in _positions)
-            {
-
-            }
-            //generate my possible moves
+            
+            //see if king is currently in check. If yes and no moves are generated it is checkmate. If no and no moves generated it is stalemate
             foreach (short piece in enemyPieces)
             {
-                if (KingCheckFinder.IsKingChecked(currentKingPiece, MoveGenerator.GenerateMovesForPiece2(piece, occupationList)))
+                if (KingCheckFinder.IsKingChecked(currentKingPiece, MoveGenerator.GenerateMovesForPiece(piece, occupationList)))
                 {
                     kingChecked = true;
                 }
@@ -250,40 +247,38 @@ namespace Chess.Models
 
             foreach (short piece in myPieces)
             {
-                returnMoves.AddRange(MoveGenerator.GenerateMovesForPiece2(piece, occupationList));
+                returnMoves.AddRange(MoveGenerator.GenerateMovesForPiece(piece, occupationList));
             }
-            List<Move> nonCheckingMoves = new List<Move>();
+
             //if I am in check, I can only return moves that resolve it, as well as moves that dont cause check
-            short[] currentBoard = new short[8 * 8];
-
-
-
             foreach (Move m in returnMoves)
             {
-                //if (m.To==846 && m.From==837 && System.Diagnostics.Debugger.IsAttached)
-                //    System.Diagnostics.Debugger.Break();
+                currentBoard = new short[8 * 8];
                 bool kingFutureChecked = false;
+
                 Move(m);
-                if (!_whiteToMove && Util.IsWhiteKing(m.To))
-                {
-                    currentKingPiece = m.To;
-                }
-                if (_whiteToMove && Util.IsBlackKing(m.To))
-                {
-                    currentKingPiece = m.To;
-                }
+
+                //probably less operations if I just maintain the 8x8 board
                 foreach (short piece in _positions)
                 {
                     short x = Util.GetXForPiece(piece);
                     short y = Util.GetYForPiece(piece);
                     currentBoard[x + (8 * y)] = piece;
-
+                    if (!_whiteToMove && Util.IsWhiteKing(piece))
+                    {
+                        currentKingPiece = piece;
+                    }
+                    if (_whiteToMove && Util.IsBlackKing(piece))
+                    {
+                        currentKingPiece = piece;
+                    }
                 }
-
+                boardList = currentBoard.ToList();
+                short currentKingPosition = Util.GetPieceOffset(currentKingPiece);
+                //its not my turn right now because of move(), so this linq returns my enemies
                 foreach (short piece in _positions.Where(e => _whiteToMove == Util.IsWhite(e)).ToList())
                 {
-
-                    if (KingCheckFinder.IsKingChecked(currentKingPiece, MoveGenerator.GenerateMovesForPiece2(piece, currentBoard.ToList())))
+                    if (KingCheckFinder.IsKingChecked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, boardList)))
                     {
                         kingFutureChecked = true;
                     }
@@ -298,13 +293,13 @@ namespace Chess.Models
             if (nonCheckingMoves.Count == 0)
             {
                 if (kingChecked)
-                    throw new CheckmateException();
+                    result.Endgame = EndgameType.Checkmate;
                 else
-                    throw new StalemateException();
+                    result.Endgame = EndgameType.Stalemate;
             }
-            return nonCheckingMoves;
-            //var checkLocks=KingCheckFinder.FindCheckLocks(currentKingPiece, occupationList, returnMoves);
+            result.Moves = nonCheckingMoves;
 
+            return result;
 
         }
 

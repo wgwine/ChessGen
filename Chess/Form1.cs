@@ -31,7 +31,6 @@ namespace Chess
             w.Start();
             g = new Game(value);
             mainGame = g;
-            string s = "";
             count = 0;
             textBox3.Text = "";
 
@@ -57,7 +56,6 @@ namespace Chess
                     string move = string.Format("{3} From:{0}, To:{1}({4},{5}), Capturing:{2}, Value:{6}\r\n", bestMove.From, bestMove.To, bestMove.Captured, name, fileTo, rankTo, g.BoardValue());
                     sb.Append(move);
 
-                    s = g.ToString();
                     sb.Append(g.ToString());
                     sb.Append("\r\n\r\n");
                     sb.Append(g.ToFENString());
@@ -108,19 +106,26 @@ namespace Chess
         public Move MinMaxRoot(int depth, Game g, bool IsMaximizingPlayer)
         {
 
-            List<Move> moves = g.GetMoves();
-
-            moves.Shuffle();
+            MoveGenerationResult result = g.GetMoves();
+            if (result.Endgame == EndgameType.Checkmate)
+            {
+                throw new CheckmateException();
+            }
+            else if (result.Endgame == EndgameType.Stalemate)
+            {
+                throw new StalemateException();
+            }
+            result.Moves.Shuffle();
             double bestMove = -9999;
             Random r = new Random();
-            Move bestMoveFound = moves[r.Next(moves.Count-1)];
+            Move bestMoveFound = result.Moves[r.Next(result.Moves.Count-1)];
 
             string FENFEN = g.ToFENString();
             //foreach (Move move in moves)
             //{
             var exceptions = new ConcurrentQueue<Exception>();
             ConcurrentBag<Tuple<Move, double>> resultVal = new ConcurrentBag<Tuple<Models.Move, double>>();
-            Parallel.ForEach(moves, (move) =>
+            Parallel.ForEach(result.Moves, (move) =>
             {
                 Game g2 = new Game(FENFEN);
                 g2.Move(move);
@@ -163,7 +168,7 @@ namespace Chess
                 return -g.BoardValue();
             }
 
-            List<Move> moves = g.GetMoves();
+            MoveGenerationResult result = g.GetMoves();
             //if (depth == 1)
             //{
             //    moves.Shuffle();
@@ -171,9 +176,9 @@ namespace Chess
             if (IsMaximizingPlayer)
             {
                 double bestMove = -9999;
-                foreach (Move move in moves)
+                foreach (Move move in result.Moves)
                 {
-
+                    count++;
                     g.Move(move);
                     bestMove = Math.Max(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer));
                     g.Undo();
@@ -188,8 +193,9 @@ namespace Chess
             else
             {
                 double bestMove = 9999;
-                foreach (Move move in moves)
+                foreach (Move move in result.Moves)
                 {
+                    count++;
                     g.Move(move);
                     bestMove = Math.Min(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer));
                     g.Undo();
@@ -204,36 +210,12 @@ namespace Chess
         }
 
 
-        public short GetBestMove(int depth, Game g)
-        {
-            if (depth == 0)
-            {
-                return (short)g.BoardValue();
-            }
-            List<string> result = new List<string>();
-            List<Move> mov = g.GetMoves();
-            short bestValue = g.WhiteToMove ? (short)-9999 : (short)9999;
-
-            foreach (Move move in mov)
-            {
-                count++;
-                g.Move(move);
-                short newValue = GetBestMove(depth - 1, g);
-                g.Undo();
-                if ((g.WhiteToMove && newValue > bestValue) || (!g.WhiteToMove && newValue < bestValue))
-                {
-                    bestValue = newValue;
-                }
-            }
-            return bestValue;
-        }
-
         private void button1_Click(object sender, EventArgs e)
         {
             mainGame.Undo();
-            List<Move> moves = mainGame.GetMoves();
+            MoveGenerationResult result = mainGame.GetMoves();
             StringBuilder sb = new StringBuilder();
-            foreach(Move m in moves)
+            foreach(Move m in result.Moves)
             {
                 string name = Util.GetPieceName(m.From).ToString();
                 string fileTo = Util.ShortToFile(Util.GetXForPiece(m.To)).ToString();
