@@ -129,10 +129,15 @@ namespace Chess
         {
             return PieceValuesIndexed[(piece >> 6)];
         }
+        public static bool IsKing(int piece)
+        {
+            return (piece >> 6 & 7) == 5;
+        }
         public static bool IsBlackKing(int piece)
         {
             return (piece >> 6 << 6)==320;
         }
+
         public static bool IsWhiteKing(int piece)
         {
             return (piece >> 6 << 6) == 832;

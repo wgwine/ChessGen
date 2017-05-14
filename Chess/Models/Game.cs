@@ -82,10 +82,7 @@ namespace Chess.Models
         private bool _whiteToMove = true;
         private int? enPassantSquare; int whiteKing = 0, blackKing = 0, currentKingPiece;
         public Stack<Move> history;
-        public List<int> Positions
-        {
-            get { return _positions; }
-        }
+
         public bool WhiteOOCastle
         {
             get
@@ -125,12 +122,6 @@ namespace Chess.Models
         public Game()
         {
             history = new Stack<Move>();
-            _positions = new int[32]{
-                704,577,642,771,836,645,582,711,    //white royal
-                520,521,522,523,524,525,526,527,    //white pawns
-                48,49,50,51,52,53,54,55,            //black pawns
-                248,121,186,315,380,189,126,255     //black royal
-            }.ToList();
             bishopEvalBlack = bishopEvalWhite.Reverse().ToArray();
         }
         public Game(string fen)
@@ -176,7 +167,6 @@ namespace Chess.Models
                     }
                 }
                 _theBoard = positions;
-                _positions = positions.Where(e => e != 0).ToList();
             }
             if (fenParts.Length > 1)
             {
@@ -210,35 +200,40 @@ namespace Chess.Models
                 //ascii offset -'1' instead of -'0' because FEN is 1 indexed instead of 0 indexed
                 enPassantSquare = (Util.FileToInt(fenParts[3][0]) + (8 * (fenParts[3][1] - '1')));
             }
+            foreach (int p in _theBoard)
+            {
+                if (Util.IsWhiteKing(p))
+                {
+                    whiteKing = p;
+                }
+                else if(Util.IsBlackKing(p))
+                {
+                    blackKing = p;
+                }
+            }
+
+
         }
         public MoveGenerationResult GetMoves()
         {
             MoveGenerationResult result = new MoveGenerationResult();
             List<Move> returnMoves = new List<Move>();
-            int[] occupationBoard = new int[8 * 8];
-            int[] currentBoard;
-            List<int> boardList = new List<int>();
             List<Move> nonCheckingMoves = new List<Move>();
-            List<int> myPieces = _positions.Where(e => _whiteToMove == Util.IsWhite(e)).ToList();
-            List<int> enemyPieces = _positions.Where(e => _whiteToMove == !Util.IsWhite(e)).ToList();
+            IEnumerable<int> positions = _theBoard.Where(e => e > 0);
+            List<int> myPieces = positions.Where(e => _whiteToMove == Util.IsWhite(e)).ToList();
+            List<int> enemyPieces = positions.Where(e => _whiteToMove == !Util.IsWhite(e)).ToList();
             bool kingChecked = false;
             int currentKingPosition;
-            //this can maybe be offloaded into move()
-            foreach (int piece in _positions)
+            if (_whiteToMove)
             {
-                if (_whiteToMove && Util.IsWhiteKing(piece))
-                {
-                    currentKingPiece = piece;
-                }
-                if (!_whiteToMove && Util.IsBlackKing(piece))
-                {
-                    currentKingPiece = piece;
-                }
-                occupationBoard[Util.GetPieceOffset(piece)] = piece;
+                currentKingPiece = whiteKing;
+            }
+            else
+            {
+                currentKingPiece = blackKing;
             }
             currentKingPosition = Util.GetPieceOffset(currentKingPiece);
 
-            List<int> occupationList = occupationBoard.ToList();
             Dictionary<int, List<Move>> enemyMovements = new Dictionary<int, List<Models.Move>>();
 
             List<Move> tempList;
@@ -261,38 +256,26 @@ namespace Chess.Models
             //if I am in check, I can only return moves that resolve it, as well as moves that dont cause check
             foreach (Move m in returnMoves)
             {
-                currentBoard = new int[8 * 8];
                 bool kingFutureChecked = false;
 
                 Move maybeCapturedEnemy = Move(m);
-
-                //probably less operations if I just maintain the 8x8 board
-                foreach (int piece in _positions)
+                if (!_whiteToMove)
                 {
-                    int x = Util.GetXForPiece(piece);
-                    int y = Util.GetYForPiece(piece);
-                    currentBoard[x + (8 * y)] = piece;
-                    if (!_whiteToMove && Util.IsWhiteKing(piece))
-                    {
-                        currentKingPiece = piece;
-                    }
-                    if (_whiteToMove && Util.IsBlackKing(piece))
-                    {
-                        currentKingPiece = piece;
-                    }
+                    currentKingPiece = whiteKing;
+                }else
+                {
+                    currentKingPiece = blackKing;
                 }
-
+                
                 currentKingPosition = Util.GetPieceOffset(currentKingPiece);
                 //its not my turn right now because of move(), so this linq returns my enemies
-                foreach (int piece in _positions.Where(e => _whiteToMove == Util.IsWhite(e)))
+                foreach (int piece in _theBoard.Where(e => e > 0 && _whiteToMove == Util.IsWhite(e)))
                 {
-
+                    //find out if the move caused the king to be in check
                     if (KingCheckFinder.IsKingChecked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
                     {
                         kingFutureChecked = true;
-                        break;
                     }
-
                 }
                 Undo();
                 if (!kingFutureChecked)
@@ -301,6 +284,7 @@ namespace Chess.Models
                 }
 
             }
+            result.Moves = nonCheckingMoves;
             if (nonCheckingMoves.Count == 0)
             {
                 if (kingChecked)
@@ -308,7 +292,7 @@ namespace Chess.Models
                 else
                     result.Endgame = EndgameType.Stalemate;
             }
-            result.Moves = nonCheckingMoves;
+
 
             return result;
 
@@ -377,19 +361,31 @@ namespace Chess.Models
             bool isWhiteMoving = Util.IsWhite(m.From);
             int fromOffset = Util.GetPieceOffset(m.From);
             int toOffset = Util.GetPieceOffset(m.To);
+            int currentToPiece = _theBoard[toOffset];
 
-
+            //remove the moving piece from previous square
             _theBoard[fromOffset] = 0;
-            if (_theBoard[toOffset] > 0 && Util.IsWhite(_theBoard[toOffset]) != isWhiteMoving)
+
+            if (currentToPiece > 0 && Util.IsWhite(currentToPiece) != isWhiteMoving)
             {
                 //check for captures and then record in history item, allows for undo
-                m.Captured = _theBoard[toOffset];
+                m.Captured = currentToPiece;
             }
+            //move piece to "to" position
             _theBoard[toOffset] = m.To;
+
+            //maintain the kings on move so they dont need to be looked up during move generation
+            if (Util.IsKing(m.To))
+            {
+                if (_whiteToMove)
+                    whiteKing = m.To;
+                else
+                    blackKing= m.To;
+            }
 
             _whiteToMove = !_whiteToMove;
             history.Push(m);
-            _positions = _theBoard.Where(e => e > 0).ToList();
+            //return the move so the caller can know if capture happened
             return history.Peek();
 
         }
@@ -401,15 +397,24 @@ namespace Chess.Models
                 int fromOffset = Util.GetPieceOffset(move.From);
                 int toOffset = Util.GetPieceOffset(move.To);
 
+                //move the piece back to its previous position, which should always be 0
                 _theBoard[fromOffset] = move.From;
-
+                //set the king reference back to previous value
+                if (Util.IsKing(move.From))
+                {
+                    if (Util.IsWhite(move.From))
+                        whiteKing = move.From;
+                    else
+                        blackKing = move.From;
+                }
+                //clear the square it had moved into
                 _theBoard[toOffset] = 0;
+                //and put back the piece it captured if any
                 if (move.Captured.HasValue)
                 {
                     _theBoard[toOffset] = move.Captured.Value;
                 }
                 _whiteToMove = !_whiteToMove;
-                _positions = _theBoard.Where(e => e > 0).ToList();
             }
         }
         public string ToFENString()

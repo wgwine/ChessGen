@@ -14,74 +14,65 @@ namespace Chess
     {
         GameService gs;
         int count = 0;
+        StringBuilder sb = new StringBuilder();
+        Game mainGame;
+        Stopwatch w = new Stopwatch();
         public Form1()
         {
             InitializeComponent();
             gs = new GameService();
         }
-        Game mainGame;
 
-        private void button3_Click(object sender, EventArgs e)
+        public void MakeMove()
         {
-            string value = textBox2.Text;
-            Game g;
-            int howmany = 100000;
-            StringBuilder sb = new StringBuilder();
-            Stopwatch w = new Stopwatch();
-            w.Start();
-            g = new Game(value);
-            mainGame = g;
-            count = 0;
-            textBox3.Text = "";
 
-            bool isMax = true;
-            string initialValue = g.BoardValue().ToString();
-            bool isSucky = true;
-            int maxMoves = 150;
-            for (int jj = 0; jj < maxMoves; jj++)
-            {
+                double initialValue = mainGame.BoardValue();
+                //count = 0;
+                w.Start();
                 try
                 {
-                    Move bestMove = MinMaxRoot(3, g, isMax);
-                    if (bestMove==null)
+                    Move bestMove = MinMaxRoot(4, mainGame, true);
+                    if (bestMove == null)
                     {
 
                         throw new Exception();
 
                     }
-                    bestMove=g.Move(bestMove);
+                    bestMove = mainGame.Move(bestMove);
                     string name = Util.GetPieceName(bestMove.From).ToString();
                     string fileTo = Util.IntToFile(Util.GetXForPiece(bestMove.To)).ToString();
                     string rankTo = (Util.GetYForPiece(bestMove.To) + 1).ToString();
-                    string move = string.Format("{3} From:{0}, To:{1}({4},{5}), Capturing:{2}, Value:{6}\r\n", bestMove.From, bestMove.To, bestMove.Captured, name, fileTo, rankTo, g.BoardValue());
+                    string move = string.Format("{3} From:{0}, To:{1}({4},{5}), Capturing:{2}, Value:{6}\r\n", bestMove.From, bestMove.To, bestMove.Captured, name, fileTo, rankTo, mainGame.BoardValue());
                     sb.Append(move);
 
-                    sb.Append(g.ToString());
+                    sb.Append(mainGame.ToString());
                     sb.Append("\r\n\r\n");
-                    sb.Append(g.ToFENString());
+                    sb.Append(mainGame.ToFENString());
                     sb.Append("\r\n\r\n");
-                }
-                catch(StalemateException ex)
+                    w.Stop();
+                    textBox3.Text += w.ElapsedMilliseconds + "ms for " + count + " options. " + (initialValue - mainGame.BoardValue()) + "\r\n\r\n";
+                    textBox3.AppendText(sb.ToString());
+                    sb.Clear();
+            }
+                catch (StalemateException ex)
                 {
-                    sb.Append("\r\n\r\nSTALEMATE!");
-                    jj = maxMoves;
+                    textBox3.AppendText("\r\n\r\nSTALEMATE!");
+                    throw ex;
                 }
                 catch (CheckmateException ex)
                 {
-                    sb.Append("\r\n\r\nCHECKMATE!");
-                    jj = maxMoves;
+                    textBox3.AppendText("\r\n\r\nCHECKMATE!");
+                    throw ex;
                 }
-                //isMax = !isMax;
 
-                isSucky = !isSucky;
-
-            }
-            w.Stop();
-            textBox3.Text += w.ElapsedMilliseconds + "ms for " + count + " options. "+ initialValue+"\r\n\r\n";
-            textBox3.Text += sb.ToString();
+            
+        }
+        public void PrintPGN()
+        {
+            sb.Clear();
             int turn = 0;
             int num = 1;
-            foreach(Move m in g.history.Reverse())
+            foreach (Move m in mainGame.history.Reverse())
             {
                 string name = Util.GetPieceProperName(m.From).ToString();
                 string fileTo = Util.IntToFile(Util.GetXForPiece(m.To)).ToString();
@@ -89,9 +80,9 @@ namespace Chess
                 string rankTo = (Util.GetYForPiece(m.To) + 1).ToString();
                 string rankFrom = (Util.GetYForPiece(m.From) + 1).ToString();
                 string cap = m.Captured.HasValue ? "x" : "";
-                name += fileFrom + rankFrom; 
-                string numStr = turn % 2 == 0 ? "\r\n" +num.ToString() + ". " : " ";
-                string move = string.Format("{0}{1}{2}{3}{4} ", numStr, name,cap, fileTo, rankTo);
+                name += fileFrom + rankFrom;
+                string numStr = turn % 2 == 0 ? "\r\n" + num.ToString() + ". " : " ";
+                string move = string.Format("{0}{1}{2}{3}{4} ", numStr, name, cap, fileTo, rankTo);
                 if (turn % 2 == 0)
                 {
                     num++;
@@ -100,13 +91,25 @@ namespace Chess
 
                 turn++;
             }
-            textBox3.Text += "\r\n" + g.ToFENString() ;
+            textBox3.Text += sb.ToString();
+        }
+        private void button3_Click(object sender, EventArgs e)
+        {
+            textBox3.Text = "";
+            string value = textBox2.Text;
+            Game g;
+            g = new Game(value);
+            sb.Append(g.ToString());
+            sb.Append("\r\n\r\n");
+            mainGame = g;
+            textBox3.Text += sb.ToString();
         }
 
         public Move MinMaxRoot(int depth, Game g, bool IsMaximizingPlayer)
         {
 
             MoveGenerationResult result = g.GetMoves();
+            count += result.Moves.Count;
             if (result.Endgame == EndgameType.Checkmate)
             {
                 throw new CheckmateException();
@@ -169,6 +172,7 @@ namespace Chess
             }
 
             MoveGenerationResult result = g.GetMoves();
+            count += result.Moves.Count;
             //if (depth == 1)
             //{
             //    result.Moves.Shuffle();
@@ -178,7 +182,6 @@ namespace Chess
                 double bestMove = -9999;
                 foreach (Move move in result.Moves)
                 {
-                    count++;
                     g.Move(move);
                     bestMove = Math.Max(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer));
                     g.Undo();
@@ -195,9 +198,8 @@ namespace Chess
                 double bestMove = 9999;
                 foreach (Move move in result.Moves)
                 {
-                    count++;
                     g.Move(move);
-                    bestMove = Math.Min(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer));
+                    bestMove = Math.Min(bestMove, MiniMax(depth - 1, g, alpha, beta, IsMaximizingPlayer));
                     g.Undo();
                     beta = Math.Min(beta, bestMove);
                     if (beta <= alpha)
@@ -212,19 +214,44 @@ namespace Chess
 
         private void button1_Click(object sender, EventArgs e)
         {
-            mainGame.Undo();
-            MoveGenerationResult result = mainGame.GetMoves();
-            StringBuilder sb = new StringBuilder();
-            foreach(Move m in result.Moves)
+            //mainGame.Undo();
+            //MoveGenerationResult result = mainGame.GetMoves();
+            //StringBuilder sb = new StringBuilder();
+            //foreach(Move m in result.Moves)
+            //{
+            //    string name = Util.GetPieceName(m.From).ToString();
+            //    string fileTo = Util.IntToFile(Util.GetXForPiece(m.To)).ToString();
+            //    string rankTo = (Util.GetYForPiece(m.To) + 1).ToString();
+            //    string move = string.Format("{2} From:{0}, To:{1}({3},{4})\r\n", m.From, m.To, name, fileTo, rankTo);
+            //    sb.Append(move);
+            //}
+
+            //textBox3.Text += sb.ToString();
+            PrintPGN();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            MakeMove();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            int m = 200;
+            for (int i=0; i<m; i++)
             {
-                string name = Util.GetPieceName(m.From).ToString();
-                string fileTo = Util.IntToFile(Util.GetXForPiece(m.To)).ToString();
-                string rankTo = (Util.GetYForPiece(m.To) + 1).ToString();
-                string move = string.Format("{2} From:{0}, To:{1}({3},{4})\r\n", m.From, m.To, name, fileTo, rankTo);
-                sb.Append(move);
+                try { 
+                    MakeMove();
+                }
+                catch (StalemateException ex)
+                {
+                    i = m;
+                }
+                catch (CheckmateException ex)
+                {
+                    i = m;
+                }
             }
-       
-            textBox3.Text += sb.ToString();
         }
     }
 }
