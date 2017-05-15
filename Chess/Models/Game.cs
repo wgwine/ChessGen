@@ -9,8 +9,6 @@ namespace Chess.Models
 {
     public class Game
     {
-        string moveKeyFormat = "{0}{1}";
-
         double[] whitePawnEval = new double[64]{ 0,  0,  0,  0,  0,  0,  0,  0, 5, 10, 10,-20,-20, 10, 10,  5, 5, -5,-10,  0,  0,-10, -5,  5, 0,  0,  0, 20, 20,  0,  0,  0, 5,  5, 10, 25, 25, 10,  5,  5,10, 10, 20, 30, 30, 20, 10, 10,50, 50, 50, 50, 50, 50, 50, 50, 0,  0,  0,  0,  0,  0,  0,  0 };
 
         double[] blackPawnEval = new double[64] { 0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 10, 10, 20, 30, 30, 20, 10, 10, 5, 5, 10, 25, 25, 10, 5, 5, 0, 0, 0, 20, 20, 0, 0, 0, 5, -5, -10, 0, 0, -10, -5, 5, 5, 10, 10, -20, -20, 10, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -25,9 +23,25 @@ namespace Chess.Models
 
         double[] knightEval = new double[64] { -50, -40, -30, -30, -30, -30, -40, -50, -40, -20, 0, 5, 5, 0, -20, -40, -30, 5, 10, 15, 15, 10, 5, -30, -30, 0, 15, 20, 20, 15, 0, -30, -30, 5, 15, 20, 20, 15, 5, -30, -30, 0, 10, 15, 15, 10, 0, -30, -40, -20, 0, 0, 0, 0, -20, -40, -50, -40, -30, -30, -30, -30, -40, -50 };
 
-        double[] whiteQueenEval = new double[64] { -20, -10, -10, -5, -5, -10, -10, -20, -10, 0, 5, 0, 0, 0, 0, -10, -10, 5, 5, 5, 5, 5, 0, -10, 0, 0, 5, 5, 5, 5, 0, -5, -5, 0, 5, 5, 5, 5, 0, -5, -10, 0, 5, 5, 5, 5, 0, -10, -10, 0, 0, 0, 0, 0, 0, -10, -20, -10, -10, -5, -5, -10, -10, -20 };
+        double[] whiteQueenEval = new double[64] {
+            -20, -10, -10, -5, -5, -10, -10, -20,
+            -10, 0, 5, 0, 0, 0, 0, -10,
+            -10, 5, 5, 5, 5, 5, 0, -10,
+            0, 0, 5, 5, 5, 5, 0, -5,
+            -5, 0, 5, 5, 5, 5, 0, -5,
+            -10, 0, 5, 5, 5, 5, 0, -10,
+            -10, 0, 0, 0, 0, 0, 0, -10,
+            -20, -10, -10, -5, -5, -10, -10, -20 };
 
-        double[] blackQueenEval = new double[64] { -20, -10, -10, -5, -5, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 5, 5, 5, 0, -10, -5, 0, 5, 5, 5, 5, 0, -5, 0, 0, 5, 5, 5, 5, 0, -5, -10, 5, 5, 5, 5, 5, 0, -10, -10, 0, 5, 0, 0, 0, 0, -10, -20, -10, -10, -5, -5, -10, -10, -20 };
+        double[] blackQueenEval = new double[64] {
+            -20, -10, -10, -5, -5, -10, -10, -20,
+            -10, 0, 0, 0, 0, 0, 0, -10,
+            -10, 0, 5, 5, 5, 5, 0, -10,
+            -5, 0, 5, 5, 5, 5, 0, -5,
+            0, 0, 5, 5, 5, 5, 0, -5,
+            -10, 5, 5, 5, 5, 5, 0, -10,
+            -10, 0, 5, 0, 0, 0, 0, -10,
+            -20, -10, -10, -5, -5, -10, -10, -20 };
 
         double[] whiteKingEval = new double[64] { 20, 30, 10, 0, 0, 10, 30, 20, 20, 20, 0, 0, 0, 0, 20, 20, -10, -20, -20, -20, -20, -20, -20, -10, -20, -30, -30, -40, -40, -30, -30, -20, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30 };
 
@@ -40,7 +54,8 @@ namespace Chess.Models
         private bool _blackOOCastle = true;
         private bool _blackOOOCastle = true;
         private bool _whiteToMove = true;
-        private int? enPassantSquare; int whiteKing = 0, blackKing = 0, currentKingPiece;
+        private int? enPassantSquare;
+        int whiteKing = 0, blackKing = 0, currentKingPiece;
         public Stack<Move> history;
         Dictionary<int, List<Move>> nextMoves = new Dictionary<int, List<Move>>();
         List<Move> actualNextMoves = new List<Move>();
@@ -168,9 +183,8 @@ namespace Chess.Models
                     blackKing = p;
                 }
             }
-
-
         }
+
         public MoveGenerationResult GetMoves(int thisMove)
         {
             MoveGenerationResult result = new MoveGenerationResult();
@@ -215,7 +229,8 @@ namespace Chess.Models
                 }
             }
             double materialScore = Material();
-            //if I am in check, I can only return moves that resolve it, as well as moves that dont cause check
+
+
             foreach (Move m in returnMoves)
             {
                 try
@@ -225,7 +240,6 @@ namespace Chess.Models
                 catch
                 {
                     int a = 0;
-
                 }
                 bool kingFutureChecked = false;
 
@@ -267,11 +281,10 @@ namespace Chess.Models
                 {
                     nextMoves.Remove((m.From << 9) + m.To);
                 }
-
             }
             nonCheckingMoves.Sort(delegate (Move x, Move y)
             {
-                return -1 * x.MaterialScore.CompareTo(y.MaterialScore);
+                return  x.MaterialScore.CompareTo(y.MaterialScore);
             });
 
             result.Moves = nonCheckingMoves;
@@ -282,12 +295,8 @@ namespace Chess.Models
                 else
                     result.Endgame = EndgameType.Stalemate;
             }
-
-
             return result;
-
         }
-
 
         public Move Move(Move m, bool keepNextMoves = false)
         {
@@ -311,9 +320,19 @@ namespace Chess.Models
             if (Util.IsKing(m.To))
             {
                 if (_whiteToMove)
+                {
                     whiteKing = m.To;
+                    _whiteOOCastle = false;
+                    _whiteOOOCastle = false;
+                }
                 else
+                {
                     blackKing = m.To;
+                    _blackOOCastle = false;
+                    _blackOOOCastle = false;
+                }
+                m.removesOO = true;
+                m.removesOOO = true;
             }
 
             _whiteToMove = !_whiteToMove;
@@ -322,7 +341,7 @@ namespace Chess.Models
             {
                 if (!nextMoves.TryGetValue((m.From << 9) + m.To, out actualNextMoves))
                 {
-                    actualNextMoves = new List<Models.Move>();
+                    actualNextMoves = new List<Move>();
                 }
                 nextMoves.Clear();
             }
@@ -420,40 +439,40 @@ namespace Chess.Models
                 switch (pN)
                 {
                     case 'P':
-                        value += 10;
+                        value += 100;
                         break;
                     case 'p':
-                        value -= 10;
+                        value -= 100;
                         break;
                     case 'R':
-                        value += 50;
+                        value += 500;
                         break;
                     case 'r':
-                        value -= 50;
+                        value -= 500;
                         break;
                     case 'B':
-                        value += 30;
+                        value += 300;
                         break;
                     case 'b':
-                        value -= 30;
+                        value -= 300;
                         break;
                     case 'N':
-                        value += 30;
+                        value += 300;
                         break;
                     case 'n':
-                        value -= 30;
+                        value -= 300;
                         break;
                     case 'Q':
-                        value += 90;
-                        break;
-                    case 'q':
-                        value -= 90;
-                        break;
-                    case 'K':
                         value += 900;
                         break;
-                    case 'k':
+                    case 'q':
                         value -= 900;
+                        break;
+                    case 'K':
+                        value += 9000;
+                        break;
+                    case 'k':
+                        value -= 9000;
                         break;
                     default:
                         break;

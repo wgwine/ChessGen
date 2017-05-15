@@ -11,7 +11,6 @@ namespace Chess
 {
     public partial class Form1 : Form
     {
-        GameService gs;
         int count = 0;
         StringBuilder sb = new StringBuilder();
         Game mainGame;
@@ -19,17 +18,17 @@ namespace Chess
         public Form1()
         {
             InitializeComponent();
-            gs = new GameService();
+
         }
 
         public void MakeMove()
         {
             double initialValue = mainGame.BoardValue();
-            //count = 0;
+            count = 0;
             w.Start();
             try
             {
-                Move bestMove = MinMaxRoot(mainGame.WhiteToMove?3:4, mainGame, true);
+                Move bestMove = MinMaxRoot(mainGame.WhiteToMove?2:3, mainGame, true);
                 if (bestMove == null)
                 {
                     throw new Exception();
@@ -47,6 +46,7 @@ namespace Chess
                 sb.Append("\r\n\r\n");
                 w.Stop();
                 sb.Append(w.ElapsedMilliseconds + "ms for " + count + " options. " + (initialValue - mainGame.BoardValue()) + " change in value.\r\n\r\n");
+                sb.Append(count/(w.ElapsedMilliseconds+1) + " moves per ms.\r\n\r\n");
                 w.Reset();
                 textBox3.AppendText(sb.ToString());
                 sb.Clear();
@@ -72,7 +72,7 @@ namespace Chess
             sb.Append(g.ToString());
             sb.Append("\r\n\r\n");
             mainGame = g;
-            textBox3.Text += sb.ToString();
+            textBox3.AppendText(sb.ToString());
         }
 
         public Move MinMaxRoot(int depth, Game g, bool IsMaximizingPlayer)
@@ -135,21 +135,30 @@ namespace Chess
         {
             if (depth == 0)
             {
-                return g.BoardValue();
+                return g.Material()*(g.WhiteToMove?-1:1);
             }
+
 
             MoveGenerationResult result = g.GetMoves(thisMove);
             count += result.Moves.Count;
 
             if (IsMaximizingPlayer)
             {
+                int multi = g.WhiteToMove ? 1 : -1;
                 double bestMove = -99999;
 
                 foreach (Move move in result.Moves)
                 {
-                    g.Move(move);
-                    bestMove = Math.Max(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer, move.To));
-                    g.Undo();
+                    if (depth == 1)
+                    {
+                        bestMove = Math.Max(bestMove, multi * move.MaterialScore);
+                    }
+                    else
+                    {
+                        g.Move(move);
+                        bestMove = Math.Max(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer, move.To));
+                        g.Undo();
+                    }
                     alpha = Math.Max(alpha, bestMove);
                     if (beta <= alpha)
                     {
@@ -160,12 +169,20 @@ namespace Chess
             }
             else
             {
+                int multi = g.WhiteToMove ? 1 : -1;
                 double bestMove = 99999;
                 foreach (Move move in result.Moves)
                 {
-                    g.Move(move);
-                    bestMove = Math.Min(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer, move.To));
-                    g.Undo();
+                    if (depth == 1)
+                    {
+                        bestMove = Math.Min(bestMove, multi*move.MaterialScore);
+                    }
+                    else
+                    {
+                        g.Move(move);
+                        bestMove = Math.Min(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer, move.To));
+                        g.Undo();
+                    }
                     beta = Math.Min(beta, bestMove);
                     if (beta <= alpha)
                     {
@@ -218,7 +235,7 @@ namespace Chess
 
                 turn++;
             }
-            textBox3.Text += sb.ToString();
+            textBox3.AppendText(sb.ToString());
         }
         private void button2_Click(object sender, EventArgs e)
         {

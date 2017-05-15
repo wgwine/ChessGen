@@ -1,52 +1,9 @@
 ﻿using Chess.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Chess
 {
-
-
-    public class GameService
-    {
-        List<int> GameState;
-        int[] StartBoard = new int[32]{
-            704,577,642,771,836,645,582,711,    //white royal
-            520,521,522,523,524,525,526,527,    //white pawns
-            48,49,50,51,52,53,54,55,            //black pawns
-            248,121,186,315,380,189,126,255     //black royal
-        };
-        public GameService()
-        {
-            GameState = new List<int>();
-            int[] temp = new int[32];
-        }
-        public string GetPieceStringFromInt(int value)
-        {
-            return string.Format("{0}-{1}-{2}", Util.GetBitAtPosition(value, 9) ? "W" : "B", Util.GetPieceType(value), Util.GetPieceOffset(value));
-        }
-        public int GetIntFromPieceString(string pieceString)
-        {
-            string[] value = pieceString.Split('-');
-            int result = 0;
-            if (value[0] == "W")
-            {
-                result += 512;
-            }
-            PieceType pt = (PieceType)Enum.Parse(typeof(PieceType), value[1]);
-            result += (byte)((byte)pt << 6);//convert pt to number with correct bitshift (*64)
-            result += byte.Parse(value[2]);//position offset
-            return result;
-        }
-        //GetValidTypeMoves-> PruneSameColorBlockingMoves -> PawnPrune -> PruneCausesCheckMoves
-    }
-    public enum PieceType : byte
-    {
-        Pawn, Night, Bishop, Rook, Queen, King
-    };
-
     public static class Util
     {
         private static Random rng = new Random();
@@ -101,7 +58,7 @@ namespace Chess
 
         public static bool IsWhite(int piece) {
             //return ((piece >> 9) & 1) == 1;//use this if more bits than 512
-            return (piece >> 9) ==1;
+            return (piece >> 9) == 1;
         }
         public static PieceType GetPieceType(int piece)
         {
@@ -114,7 +71,7 @@ namespace Chess
         public static char[] PieceNames = new char[] { 'p', 'n', 'b', 'r', 'q', 'k','_','_', 'P', 'N', 'B', 'R', 'Q', 'K' };
         public static char[] PieceProperNames = new char[] { ' ', 'N', 'B', 'R', 'Q', 'K', '_', '_', ' ', 'N', 'B', 'R', 'Q', 'K' };
         public static Dictionary<char, int> PieceValues = new Dictionary<char, int> { {'p',-1},{ 'P', 1 }, { 'n', -3 }, { 'N', 3 }, { 'b', -3 }, { 'B', 3 }, { 'r', -5 }, { 'R', 5 }, { 'q', -9 }, { 'Q', 9 }, { 'k', 0 }, { 'K', 0 } };
-        public static int[] PieceValuesIndexed = new int[] { -10,-30,-30,-50,-90,-900,0,0,10,30,30,50,90,900};
+        public static int[] PieceValuesIndexed = new int[] { -100,-300,-300,-500,-900,-9000,0,0,100,300,300,500,900,9000};
         public static char GetPieceName(int piece)
         {
             //offset the position bits from the piece, and use the lookup array. 3 bits for type, and the 4th bit is color. 
@@ -146,7 +103,5 @@ namespace Chess
         {
             return (piece & (1 << pos)) != 0;
         }
-
-    }
-  
+    }  
 }

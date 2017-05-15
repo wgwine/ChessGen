@@ -12,6 +12,9 @@ namespace Chess.Models
         public int To;
         public int? Captured;
         public double MaterialScore;
+        public bool removesOOO;
+        public bool removesOO;
+        public int CastlePiece;
         public Move()
         {
         }

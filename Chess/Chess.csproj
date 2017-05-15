@@ -52,7 +52,8 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="GameService.cs" />
+    <Compile Include="Models\PieceType.cs" />
+    <Compile Include="PieceUtil.cs" />
     <Compile Include="Models\KingCheckFinder.cs" />
     <Compile Include="Models\Move.cs" />
     <Compile Include="Models\MoveGenerationResult.cs" />
