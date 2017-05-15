@@ -103,14 +103,7 @@ namespace Chess.Models
 
             foreach (int newPosition in tempResult)
             {
-                //int temp = newPosition;
-                //add check value to moves, wont be needed if look for checks on turn
-                //if(board[newPosition + captureOffset1] == opponentKing || board[newPosition + captureOffset2] == opponentKing)
-                //{
-                //    temp += 1024;
-                //}
-
-                result.Add((newPosition | depositionedPiece));
+                result.Add(newPosition | depositionedPiece);
             }
 
             return result;

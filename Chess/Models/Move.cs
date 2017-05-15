@@ -11,6 +11,7 @@ namespace Chess.Models
         public int From;
         public int To;
         public int? Captured;
+        public double MaterialScore;
         public Move()
         {
         }
