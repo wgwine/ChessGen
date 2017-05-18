@@ -126,7 +126,7 @@ namespace Chess.Models
                     for (int x = 0; x < row.Length; x++)
                     {
                         //if we see a number, that means n spots are empty in this row, skip over them
-                        if (Char.IsNumber(row[x]))
+                        if (char.IsNumber(row[x]))
                         {
                             //-'0' char trick to offset ascii number
                             index += row[x] - '0';
@@ -207,13 +207,13 @@ namespace Chess.Models
 
             Dictionary<int, List<Move>> enemyMovements = new Dictionary<int, List<Models.Move>>();
 
-            List<Move> tempList;
             //see if king is currently in check. If yes and no moves are generated it is checkmate. If no and no moves generated it is stalemate
             foreach (int piece in enemyPieces)
             {
                 if (KingCheckFinder.IsKingChecked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
                 {
                     kingChecked = true;
+                    break;
                 }
             }
 
@@ -228,19 +228,16 @@ namespace Chess.Models
                     returnMoves.AddRange(MoveGenerator.GenerateMovesForPiece(piece, _theBoard));
                 }
             }
-            double materialScore = Material();
+            double materialScore = BoardValue();
 
 
             foreach (Move m in returnMoves)
             {
-                try
+                if(!nextMoves.ContainsKey((m.From << 9) + m.To))
                 {
                     nextMoves.Add((m.From << 9) + m.To, new List<Move>());
-                }
-                catch
-                {
-                    int a = 0;
-                }
+                }                    
+
                 bool kingFutureChecked = false;
 
                 Move maybeCapturedEnemy = Move(m, true);
@@ -269,6 +266,7 @@ namespace Chess.Models
                     if (KingCheckFinder.IsKingChecked(currentKingPosition, nextMovesTempHolder))
                     {
                         kingFutureChecked = true;
+                        break;
                     }
                 }
 

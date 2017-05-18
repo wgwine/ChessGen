@@ -29,17 +29,17 @@ namespace Chess.Models
                 {
                     if (board[position + 8] == 0)
                     {
-                        tempResult.Add((position + 8));
+                        result.Add((piece + 8));
                     }
                     //captures
                     if (positionX > 0 && board[position + 7] > 0 && Util.IsWhite(board[position + 7]) != isWhite)
                     {
-                        tempResult.Add((position + 7));
+                        result.Add((piece + 7));
                     }
 
                     if (positionX < 7 && board[position + 9] > 0 && Util.IsWhite(board[position + 9]) != isWhite)
                     {
-                        tempResult.Add((position + 9));
+                        result.Add((piece + 9));
                     }
 
 
@@ -47,7 +47,7 @@ namespace Chess.Models
                     {
                         if (board[position + 8] == 0 && board[position + (2 * 8)] == 0)
                         {
-                            tempResult.Add((position + (2 * 8)));
+                            result.Add((piece + (2 * 8)));
                         }
                     }
                 }
@@ -69,18 +69,18 @@ namespace Chess.Models
                 if (positionY > 1)
                 {
                     if (board[position -8] == 0)
-                        tempResult.Add((position -8));
+                        result.Add((piece - 8));
 
                     if (positionX <7 && board[position -7] > 0 && Util.IsWhite(board[position -7]) != isWhite)
-                        tempResult.Add((position -7));
+                        result.Add((piece - 7));
 
                     if (positionX > 0 && board[position -9] > 0 && Util.IsWhite(board[position -9]) != isWhite)
-                        tempResult.Add((position -9));
+                        result.Add((piece - 9));
 
                     if (positionY == 6)
                     {
                         if (board[position -8] == 0 && board[position - (2 * 8)] == 0)
-                            tempResult.Add((position - (2 * 8)));
+                            result.Add((piece - (2 * 8)));
                     }
                 }
                 else if (positionY == 1)
@@ -96,13 +96,6 @@ namespace Chess.Models
                         result.Add((PieceTypeFENMap.PieceValue('q') + position -9));
                 }
             }
-
-
-            foreach (int newPosition in tempResult)
-            {
-                result.Add(newPosition | depositionedPiece);
-            }
-
             return result;
         }
     }

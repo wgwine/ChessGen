@@ -28,7 +28,7 @@ namespace Chess
             w.Start();
             try
             {
-                Move bestMove = MinMaxRoot(mainGame.WhiteToMove?2:3, mainGame, true);
+                Move bestMove = MinMaxRoot(mainGame.WhiteToMove?(int)numericUpDownWhite.Value: (int)numericUpDownBlack.Value, mainGame, true);
                 if (bestMove == null)
                 {
                     throw new Exception();
@@ -79,6 +79,7 @@ namespace Chess
         {
 
             MoveGenerationResult result = g.GetMoves(-1);
+
             count += result.Moves.Count;
             if (result.Endgame == EndgameType.Checkmate)
             {
