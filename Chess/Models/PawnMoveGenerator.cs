@@ -22,7 +22,6 @@ namespace Chess.Models
             int depositionedPiece = Util.DepositionPiece(piece);
             int positionX = Util.GetXForPosition(position);
             int positionY = Util.GetYForPosition(position);
-            //if white
             if (isWhite)
             {
                 if (positionY < 6)

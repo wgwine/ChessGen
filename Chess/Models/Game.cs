@@ -228,7 +228,7 @@ namespace Chess.Models
                     returnMoves.AddRange(MoveGenerator.GenerateMovesForPiece(piece, _theBoard));
                 }
             }
-            double materialScore = BoardValue();
+            double materialScore = Material();
 
 
             foreach (Move m in returnMoves)
@@ -266,7 +266,6 @@ namespace Chess.Models
                     if (KingCheckFinder.IsKingChecked(currentKingPosition, nextMovesTempHolder))
                     {
                         kingFutureChecked = true;
-                        break;
                     }
                 }
 
@@ -282,7 +281,12 @@ namespace Chess.Models
             }
             nonCheckingMoves.Sort(delegate (Move x, Move y)
             {
-                return  x.MaterialScore.CompareTo(y.MaterialScore);
+                if(WhiteToMove)
+                    return x.MaterialScore.CompareTo(y.MaterialScore);
+                else
+                {
+                    return y.MaterialScore.CompareTo(x.MaterialScore);
+                }
             });
 
             result.Moves = nonCheckingMoves;

@@ -20,7 +20,7 @@ namespace Chess.Models
             int posX = Util.GetXForPosition(position);
             int posY = Util.GetYForPosition(position);
             bool stopA = false, stopB = false, stopC = false, stopD = false;
-            int x, y, v;
+            int v;
             //expand out from piece position
             for (int i = 1; i < 8; i++)
             {
@@ -28,9 +28,7 @@ namespace Chess.Models
                 if (!stopA)
                 {
                     v = (position + (8 * i));//up
-                    x = Util.GetXForPosition(v);
-                    y = Util.GetYForPosition(v);
-                    if (x == posX && y < 8 && !stopA)
+                    if (Util.GetXForPosition(v) == posX && Util.GetYForPosition(v) < 8 && !stopA)
                     {
                         if (board[v] > 0)
                         {
@@ -48,10 +46,7 @@ namespace Chess.Models
                 if (!stopB)
                 {
                     v = (position - (8 * i));//down
-                    x = Util.GetXForPosition(v);
-                    y = Util.GetYForPosition(v);
-
-                    if (x == posX && y >= 0)
+                    if (Util.GetXForPosition(v) == posX && Util.GetYForPosition(v) >= 0)
                     {
                         var newPos = (unpositionedPiece + v);
                         if (board[v] > 0)
@@ -69,9 +64,7 @@ namespace Chess.Models
                 if (!stopC)
                 {
                     v = (position + (i));//right
-                    x = Util.GetXForPosition(v);
-                    y = Util.GetYForPosition(v);
-                    if (y == posY && x < 8)
+                    if (Util.GetYForPosition(v) == posY && Util.GetXForPosition(v) < 8)
                     {
                         if (board[v] > 0)
                         {
@@ -88,9 +81,7 @@ namespace Chess.Models
                 if (!stopD)
                 {
                     v = (position - (i));//left
-                    x = Util.GetXForPosition(v);
-                    y = Util.GetYForPosition(v);
-                    if (y == posY && x >= 0)
+                    if (Util.GetYForPosition(v) == posY && Util.GetXForPosition(v) >= 0)
                     {
                         if (board[v] > 0)
                         {

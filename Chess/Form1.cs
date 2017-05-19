@@ -28,11 +28,10 @@ namespace Chess
             w.Start();
             try
             {
-                Move bestMove = MinMaxRoot(mainGame.WhiteToMove?(int)numericUpDownWhite.Value: (int)numericUpDownBlack.Value, mainGame, true);
-                if (bestMove == null)
-                {
-                    throw new Exception();
-                }
+                //Move bestMove = MinMaxRoot(mainGame.WhiteToMove?(int)numericUpDownWhite.Value: (int)numericUpDownBlack.Value, mainGame, true);
+
+                Move bestMove = newRoot(3, mainGame);
+
                 bestMove = mainGame.Move(bestMove);
                 string name = Util.GetPieceName(bestMove.From).ToString();
                 string fileTo = Util.IntToFile(Util.GetXForPiece(bestMove.To)).ToString();
@@ -46,7 +45,7 @@ namespace Chess
                 sb.Append("\r\n\r\n");
                 w.Stop();
                 sb.Append(w.ElapsedMilliseconds + "ms for " + count + " options. " + (initialValue - mainGame.BoardValue()) + " change in value.\r\n\r\n");
-                sb.Append(count/(w.ElapsedMilliseconds+1) + " moves per ms.\r\n\r\n");
+                sb.Append(count / (w.ElapsedMilliseconds + 1) + " moves per ms.\r\n\r\n");
                 w.Reset();
                 textBox3.AppendText(sb.ToString());
                 sb.Clear();
@@ -75,6 +74,121 @@ namespace Chess
             textBox3.AppendText(sb.ToString());
         }
 
+        public Move newRoot(int depth, Game g)
+        {
+            MoveGenerationResult result = g.GetMoves(-1);
+            Random r = new Random();
+
+            count += result.Moves.Count;
+            if (result.Endgame == EndgameType.Checkmate)
+            {
+                throw new CheckmateException();
+            }
+            else if (result.Endgame == EndgameType.Stalemate)
+            {
+                throw new StalemateException();
+            }
+            Move bestMoveFound = result.Moves[r.Next(result.Moves.Count - 1)];
+
+            double bestMove = g.WhiteToMove ? -99999 : 99999;
+
+            string FENFEN = g.ToFENString();
+
+            var exceptions = new ConcurrentQueue<Exception>();
+            ConcurrentBag<Move> resultVal = new ConcurrentBag<Move>();
+            Parallel.ForEach(result.Moves, (move) =>
+            {
+                Game g2 = new Game(FENFEN);
+                g2.Move(move);
+                try
+                {
+                    move.MaterialScore = NewMiniMax(depth - 1, g2, move).MaterialScore;
+                    resultVal.Add(move);
+                }
+                catch (Exception w)
+                {
+                    exceptions.Enqueue(w);
+                }
+                g2.Undo();
+            });
+
+            if (exceptions.Count > 0 && resultVal.Count == 0)
+            {
+                Exception ex;
+                exceptions.TryDequeue(out ex);
+                throw ex;
+            }
+
+            foreach (Move moveTuple in resultVal)
+            {
+                if ((g.WhiteToMove && (moveTuple.MaterialScore >= bestMove)) || (!g.WhiteToMove && (moveTuple.MaterialScore <= bestMove)))
+                {
+                    bestMove = moveTuple.MaterialScore;
+                    bestMoveFound = moveTuple;
+                }
+            }
+
+            return bestMoveFound;
+        }
+        public Move NewMiniMax(int depth, Game g, Move thisMove)
+        {
+            MoveGenerationResult result = g.GetMoves(thisMove.To);
+            if (depth == 0)
+            {
+                thisMove.MaterialScore = result.Moves.Count * thisMove.MaterialScore;
+                return thisMove;
+            }
+            count += result.Moves.Count;
+            Move theMove = result.Moves[0];
+
+            double material = g.BoardValue();
+
+            if (g.WhiteToMove)
+            {
+                double bestMove = -99999;
+                foreach (Move move in result.Moves)
+                {
+                    g.Move(move);
+                    var nextMove = NewMiniMax(depth - 1, g, move);
+                    if (nextMove.MaterialScore >= bestMove)
+                    {
+                        bestMove = move.MaterialScore;
+                        theMove = move;
+                    }else if (nextMove.MaterialScore < bestMove)
+                    {
+                        g.Undo();
+                        break;
+                    }
+                    g.Undo();
+                }
+                return theMove;
+            }
+            else
+            {
+
+                double bestMove = 99999;
+
+                foreach (Move move in result.Moves)
+                {
+                    g.Move(move);
+                    var nextMove = NewMiniMax(depth - 1, g, move);
+                    if (nextMove.MaterialScore <= bestMove)
+                    {
+                        bestMove = move.MaterialScore;
+                        theMove = move;
+                    }
+                    else if (nextMove.MaterialScore > bestMove)
+                    {
+                        g.Undo();
+                        break;
+                    }
+                    g.Undo();
+
+                }
+
+                return theMove;
+            }
+        }
         public Move MinMaxRoot(int depth, Game g, bool IsMaximizingPlayer)
         {
 
@@ -136,7 +250,7 @@ namespace Chess
         {
             if (depth == 0)
             {
-                return g.Material()*(g.WhiteToMove?-1:1);
+                return g.Material() * (g.WhiteToMove ? -1 : 1);
             }
 
 
@@ -176,7 +290,7 @@ namespace Chess
                 {
                     if (depth == 1)
                     {
-                        bestMove = Math.Min(bestMove, multi*move.MaterialScore);
+                        bestMove = Math.Min(bestMove, multi * move.MaterialScore);
                     }
                     else
                     {
