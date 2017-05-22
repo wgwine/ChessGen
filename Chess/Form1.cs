@@ -30,7 +30,7 @@ namespace Chess
             {
                 Move bestMove = MinMaxRoot(mainGame.WhiteToMove?(int)numericUpDownWhite.Value: (int)numericUpDownBlack.Value, mainGame, true);
 
-                //Move bestMove = newRoot(3, mainGame);
+               //Move bestMove = newRoot(3, mainGame);
 
                 bestMove = mainGame.Move(bestMove);
                 string name = Util.GetPieceName(bestMove.From).ToString();
@@ -76,7 +76,7 @@ namespace Chess
 
         public Move newRoot(int depth, Game g)
         {
-            MoveGenerationResult result = g.GetMoves(-1);
+            MoveGenerationResult result = g.GetMoves();
             Random r = new Random();
 
             count += result.Moves.Count;
@@ -132,9 +132,14 @@ namespace Chess
         }
         public Move NewMiniMax(int depth, Game g, Move thisMove)
         {
-            MoveGenerationResult result = g.GetMoves(thisMove.To);
+            MoveGenerationResult result = g.GetMoves();
             if (depth == 0)
             {
+                if (result.Moves.Count == 0)
+                {
+                    thisMove.MaterialScore = g.WhiteToMove ? -1000000 : 1000000;
+                    return thisMove;
+                }
                 thisMove.MaterialScore = result.Moves.Count * thisMove.MaterialScore;
                 return thisMove;
             }
@@ -192,7 +197,7 @@ namespace Chess
         public Move MinMaxRoot(int depth, Game g, bool IsMaximizingPlayer)
         {
 
-            MoveGenerationResult result = g.GetMoves(-1);
+            MoveGenerationResult result = g.GetMoves();
 
             count += result.Moves.Count;
             if (result.Endgame == EndgameType.Checkmate)
@@ -254,7 +259,7 @@ namespace Chess
             }
 
 
-            MoveGenerationResult result = g.GetMoves(thisMove);
+            MoveGenerationResult result = g.GetMoves();
             count += result.Moves.Count;
 
             if (IsMaximizingPlayer)

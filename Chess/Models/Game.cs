@@ -186,18 +186,21 @@ namespace Chess.Models
             }
         }
 
-        public MoveGenerationResult GetMoves(int thisMove)
+        public MoveGenerationResult GetMoves()
         {
             MoveGenerationResult result = new MoveGenerationResult();
-            List<Move> returnMoves = new List<Move>();
+            List<Move> myGeneratedMoves = new List<Move>();
             List<Move> nonCheckingMoves = new List<Move>();
+            List<ulong> enemyPseudoMoves = new List<ulong>();
+            List<int> threateningPieces = new List<int>();
+            List<int> threateningPiecesNonKingMove = new List<int>();
             IEnumerable<int> positions = _theBoard.Where(e => e > 0);
             List<int> myPieces = positions.Where(e => _whiteToMove == Util.IsWhite(e)).ToList();
             List<int> enemyPieces = positions.Where(e => _whiteToMove == !Util.IsWhite(e)).ToList();
             bool kingChecked = false;
             int currentKingPosition;
             int opponentKingPiece;
-            double materialScore = Material();
+            double materialScore = BoardValue();
             if (_whiteToMove)
             {
                 currentKingPiece = whiteKing;
@@ -217,7 +220,7 @@ namespace Chess.Models
             currentKingPosition = Util.GetPieceOffset(currentKingPiece);
 
             Dictionary<int, List<Move>> enemyMovements = new Dictionary<int, List<Models.Move>>();
-            List<ulong> enemyPseudoMoves = new List<ulong>();
+            
 
             //see if king is currently in check. If yes and no moves are generated it is checkmate. If no and no moves generated it is stalemate
             foreach (int piece in enemyPieces)
@@ -226,37 +229,39 @@ namespace Chess.Models
                 {
                     kingChecked = true;
                 }
+                //get all targeted enemy squares without regard for blocking squares. Used to trim check verification step
                 enemyPseudoMoves.Add(MoveGenerator.PseudomoveBitboard(piece, _theBoard));
             }
 
+            //generate legal moves for each of my pieces
             foreach (int piece in myPieces)
             {
-                returnMoves.AddRange(MoveGenerator.GenerateMovesForPiece(piece, _theBoard));
-            }
+                myGeneratedMoves.AddRange(MoveGenerator.GenerateMovesForPiece(piece, _theBoard));
+            }     
+
+
             
-
-
-            List<int> checkingPieces = new List<int>();
-            ulong kingpos = KingMoveGenerator.PseudomoveBitboard(currentKingPiece);
+            ulong movedKingPositions = KingMoveGenerator.PseudomoveBitboard(currentKingPiece);
+            ulong unmovedKingPosition = (one << (currentKingPosition));
             foreach (int piece in _theBoard.Where(e => e > 0 && _whiteToMove != Util.IsWhite(e)))
             {
                 //find out if the move caused the king to be in check
-                if ((kingpos & MoveGenerator.PseudomoveBitboard(piece, _theBoard)) > 0)
+                if ((movedKingPositions & MoveGenerator.PseudomoveBitboard(piece, _theBoard)) > 0)
                 {
-                    checkingPieces.Add(piece);
+                    threateningPieces.Add(piece);
+                }
+                if ((unmovedKingPosition & MoveGenerator.PseudomoveBitboard(piece, _theBoard)) > 0)
+                {
+                    threateningPiecesNonKingMove.Add(piece);
                 }
             }
 
-            foreach (Move m in returnMoves)
+            foreach (Move m in myGeneratedMoves)
             {
-                if (!nextMoves.ContainsKey((m.From << 9) + m.To))
-                {
-                    nextMoves.Add((m.From << 9) + m.To, new List<Move>());
-                }
-
-                bool kingFutureChecked = false;
+                bool kingFutureChecked = false;         
 
                 Move maybeCapturedEnemy = Move(m, true);
+
                 m.MaterialScore = materialScore + (maybeCapturedEnemy.Captured.HasValue ? Util.GetPieceValue(maybeCapturedEnemy.Captured.Value) : 0);
 
                 if (!_whiteToMove)
@@ -268,14 +273,28 @@ namespace Chess.Models
                     currentKingPiece = blackKing;
                 }
                 currentKingPosition = Util.GetPieceOffset(currentKingPiece);
-                foreach (int piece in checkingPieces.Where(e=>_theBoard.Contains(e)))
+                if (Util.IsKing(m.From))
                 {
-                    //find out if the move caused the king to be in check
-                    if (KingCheckFinder.IsKingChecked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
+                    foreach (int piece in threateningPieces.Where(e => _theBoard.Contains(e)))
                     {
-                        kingFutureChecked = true;
+                        //find out if the move caused the king to be in check
+                        if (KingCheckFinder.IsKingChecked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
+                        {
+                            kingFutureChecked = true;
+                        }
+                    }
+                }else
+                {
+                    foreach (int piece in threateningPiecesNonKingMove.Where(e => _theBoard.Contains(e)))
+                    {
+                        //find out if the move caused the king to be in check
+                        if (KingCheckFinder.IsKingChecked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
+                        {
+                            kingFutureChecked = true;
+                        }
                     }
                 }
+
                 Undo();
                 if (!kingFutureChecked)
                 {
