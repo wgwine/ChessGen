@@ -94,7 +94,6 @@ namespace Chess
         {
             return (piece >> 6 << 6)==320;
         }
-
         public static bool IsWhiteKing(int piece)
         {
             return (piece >> 6 << 6) == 832;

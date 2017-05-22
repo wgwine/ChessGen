@@ -8,7 +8,53 @@ namespace Chess.Models
 {
     public static class BishopMoveGenerator
     {
+        public static ulong PseudomoveBitboard(int piece)
+        {
+            ulong result = 0;
+            int position = Util.GetPieceOffset(piece);
+            int posX = Util.GetXForPosition(position);
+            int posY = Util.GetYForPosition(position);
+            int x, y, v;
+            ulong one = 1;
+            //expand out from piece position
 
+            for (int i = 1; i < 8; i++)
+            {
+                v = (position + (9 * i));//up right
+                x = Util.GetXForPosition(v);
+                y = Util.GetYForPosition(v);
+                //prevent wrapping
+                if (x > posX && x < 8 && y < 8)
+                {
+                    result |= (one << (v));
+                }
+
+                v = (position - (9 * i));//down left
+                x = Util.GetXForPosition(v);
+                y = Util.GetYForPosition(v);
+                if (x < posX && x >= 0 && y >= 0)
+                {
+                    result |= (one << (v));
+                }
+
+                v = (position + (7 * i));//up left
+                x = Util.GetXForPosition(v);
+                y = Util.GetYForPosition(v);
+                if (x < posX && x >= 0 && y < 8)
+                {
+                    result |= (one << (v));
+                }
+
+                v = (position - (7 * i));//down right
+                x = Util.GetXForPosition(v);
+                y = Util.GetYForPosition(v);
+                if (x > posX && x < 8 && y >= 0)
+                {
+                    result |= (one << (v));
+                }
+            }
+            return result;
+        }
         public static List<int> PossiblePositions(int piece, int[] board)
         {
             bool isWhite = Util.IsWhite(piece);

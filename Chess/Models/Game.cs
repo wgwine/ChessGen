@@ -9,7 +9,7 @@ namespace Chess.Models
 {
     public class Game
     {
-        double[] whitePawnEval = new double[64]{ 0,  0,  0,  0,  0,  0,  0,  0, 5, 10, 10,-20,-20, 10, 10,  5, 5, -5,-10,  0,  0,-10, -5,  5, 0,  0,  0, 20, 20,  0,  0,  0, 5,  5, 10, 25, 25, 10,  5,  5,10, 10, 20, 30, 30, 20, 10, 10,50, 50, 50, 50, 50, 50, 50, 50, 0,  0,  0,  0,  0,  0,  0,  0 };
+        double[] whitePawnEval = new double[64] { 0, 0, 0, 0, 0, 0, 0, 0, 5, 10, 10, -20, -20, 10, 10, 5, 5, -5, -10, 0, 0, -10, -5, 5, 0, 0, 0, 20, 20, 0, 0, 0, 5, 5, 10, 25, 25, 10, 5, 5, 10, 10, 20, 30, 30, 20, 10, 10, 50, 50, 50, 50, 50, 50, 50, 50, 0, 0, 0, 0, 0, 0, 0, 0 };
 
         double[] blackPawnEval = new double[64] { 0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 10, 10, 20, 30, 30, 20, 10, 10, 5, 5, 10, 25, 25, 10, 5, 5, 0, 0, 0, 20, 20, 0, 0, 0, 5, -5, -10, 0, 0, -10, -5, 5, 5, 10, 10, -20, -20, 10, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -59,6 +59,7 @@ namespace Chess.Models
         public Stack<Move> history;
         Dictionary<int, List<Move>> nextMoves = new Dictionary<int, List<Move>>();
         List<Move> actualNextMoves = new List<Move>();
+        ulong one = 1;
         public bool WhiteOOCastle
         {
             get
@@ -195,6 +196,8 @@ namespace Chess.Models
             List<int> enemyPieces = positions.Where(e => _whiteToMove == !Util.IsWhite(e)).ToList();
             bool kingChecked = false;
             int currentKingPosition;
+            int opponentKingPiece;
+            double materialScore = Material();
             if (_whiteToMove)
             {
                 currentKingPiece = whiteKing;
@@ -203,9 +206,18 @@ namespace Chess.Models
             {
                 currentKingPiece = blackKing;
             }
+            if (!_whiteToMove)
+            {
+                opponentKingPiece = whiteKing;
+            }
+            else
+            {
+                opponentKingPiece = blackKing;
+            }
             currentKingPosition = Util.GetPieceOffset(currentKingPiece);
 
             Dictionary<int, List<Move>> enemyMovements = new Dictionary<int, List<Models.Move>>();
+            List<ulong> enemyPseudoMoves = new List<ulong>();
 
             //see if king is currently in check. If yes and no moves are generated it is checkmate. If no and no moves generated it is stalemate
             foreach (int piece in enemyPieces)
@@ -213,30 +225,34 @@ namespace Chess.Models
                 if (KingCheckFinder.IsKingChecked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
                 {
                     kingChecked = true;
-                    break;
                 }
+                enemyPseudoMoves.Add(MoveGenerator.PseudomoveBitboard(piece, _theBoard));
             }
 
-            if (actualNextMoves.Count > 0)
+            foreach (int piece in myPieces)
             {
-                returnMoves = actualNextMoves;
+                returnMoves.AddRange(MoveGenerator.GenerateMovesForPiece(piece, _theBoard));
             }
-            else
+            
+
+
+            List<int> checkingPieces = new List<int>();
+            ulong kingpos = KingMoveGenerator.PseudomoveBitboard(currentKingPiece);
+            foreach (int piece in _theBoard.Where(e => e > 0 && _whiteToMove != Util.IsWhite(e)))
             {
-                foreach (int piece in myPieces)
+                //find out if the move caused the king to be in check
+                if ((kingpos & MoveGenerator.PseudomoveBitboard(piece, _theBoard)) > 0)
                 {
-                    returnMoves.AddRange(MoveGenerator.GenerateMovesForPiece(piece, _theBoard));
+                    checkingPieces.Add(piece);
                 }
             }
-            double materialScore = Material();
-
 
             foreach (Move m in returnMoves)
             {
-                if(!nextMoves.ContainsKey((m.From << 9) + m.To))
+                if (!nextMoves.ContainsKey((m.From << 9) + m.To))
                 {
                     nextMoves.Add((m.From << 9) + m.To, new List<Move>());
-                }                    
+                }
 
                 bool kingFutureChecked = false;
 
@@ -251,43 +267,22 @@ namespace Chess.Models
                 {
                     currentKingPiece = blackKing;
                 }
-
                 currentKingPosition = Util.GetPieceOffset(currentKingPiece);
-                List<Move> nextMovesTemp = new List<Move>();
-                List<Move> nextMovesTempHolder;
-                //its not my turn right now because of move(), so this linq returns my enemies
-                foreach (int piece in _theBoard.Where(e => e > 0 && _whiteToMove == Util.IsWhite(e)))
+                foreach (int piece in checkingPieces.Where(e=>_theBoard.Contains(e)))
                 {
-                    nextMovesTempHolder = MoveGenerator.GenerateMovesForPiece(piece, _theBoard);
-                    nextMoves.TryGetValue((m.From << 9) + m.To, out nextMovesTemp);
-                    nextMovesTemp.AddRange(nextMovesTempHolder);
-
                     //find out if the move caused the king to be in check
-                    if (KingCheckFinder.IsKingChecked(currentKingPosition, nextMovesTempHolder))
+                    if (KingCheckFinder.IsKingChecked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
                     {
                         kingFutureChecked = true;
                     }
                 }
-
                 Undo();
                 if (!kingFutureChecked)
                 {
                     nonCheckingMoves.Add(m);
                 }
-                else
-                {
-                    nextMoves.Remove((m.From << 9) + m.To);
-                }
             }
-            nonCheckingMoves.Sort(delegate (Move x, Move y)
-            {
-                if(WhiteToMove)
-                    return x.MaterialScore.CompareTo(y.MaterialScore);
-                else
-                {
-                    return y.MaterialScore.CompareTo(x.MaterialScore);
-                }
-            });
+
 
             result.Moves = nonCheckingMoves;
             if (nonCheckingMoves.Count == 0)

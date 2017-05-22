@@ -8,7 +8,68 @@ namespace Chess.Models
 {
     public static class KnightMoveGenerator
     {
+        public static ulong PseudomoveBitboard(int piece)
+        {
+            int position = Util.GetPieceOffset(piece);
+            int positionX = Util.GetXForPosition(position);
+            int positionY = Util.GetYForPosition(position);
+            ulong result = 0;
+            ulong one = 1;
+            if (positionX < 7)
+            {
+                if (positionY < 6)
+                {
+                    //1:00
+                    result |= (one << (position + 17));
+                }
+                if (positionY > 1)
+                {
+                    //5:00
+                    result |= (one << (position - 15));
+                }
+            }
+            if (positionX < 6)
+            {
+                if (positionY < 7)
+                {
+                    //2:00
+                    result |= (one << (position + 10));
+                }
+                if (positionY > 0)
+                {
+                    //4:00
+                    result |= (one << (position - 6));
+                }
+            }
+            if (positionX > 0)
+            {
+                if (positionY > 1)
+                {
+                    //7:00
+                    result |= (one << (position - 17));
+                }
+                if (positionY < 6)
+                {
+                    //11:00
+                    result |= (one << (position + 15));
+                }
+            }
+            if (positionX > 1)
+            {
+                if (positionY > 0)
+                {
+                    //8:00
+                    result |= (one << (position - 10));
+                }
+                if (positionY < 7)
+                {
+                    //10:00
+                    result |= (one << (position + 6));
+                }
+            }
 
+            return result;
+        }
         public static List<int> PossiblePositions(int piece, int[] board)
         {
             bool isWhite = Util.IsWhite(piece);

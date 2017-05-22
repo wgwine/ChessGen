@@ -1,10 +1,66 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 
 namespace Chess.Models
 {
     public static class KingMoveGenerator
     {
+        public static ulong PseudomoveBitboard(int piece)
+        {
+            int position = Util.GetPieceOffset(piece);
+            int positionX = Util.GetXForPosition(position);
+            int positionY = Util.GetYForPosition(position);
+            ulong resultBoard = 0;
+            ulong one = 1;
+            if (positionX < 7)
+            {
+                //right
+                resultBoard |= (one << (position + 1));
+
+                if (positionY < 7)
+                {
+                    //up right
+                    resultBoard |= (one << (position + 9));
+                }
+                if (positionY > 0)
+                {
+                    //down right
+                    resultBoard |= (one << (position - 7));
+                }
+            }
+
+            if (positionX > 0)
+            {
+                //left
+                resultBoard |= (one << (position - 1));
+
+                if (positionY < 7)
+                {
+                    //up left
+                    resultBoard |= (one << (position + 7));
+                }
+                if (positionY > 0)
+                {
+                    //down left
+                    resultBoard |= (one << (position - 9));
+                }
+            }
+
+            if (positionY < 7)
+            {
+                //up
+                resultBoard |= (one << (position + 8));
+            }
+
+            if (positionY > 0)
+            {
+                //down
+                resultBoard |= (one << (position - 8));
+            }
+
+            return resultBoard;
+        }
         public static List<int> PossiblePositions(int piece, int[] board)
         {
             bool isWhite = Util.IsWhite(piece);
@@ -70,5 +126,6 @@ namespace Chess.Models
             }
             return result;
         }
+       
     }
 }

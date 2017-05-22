@@ -8,6 +8,29 @@ namespace Chess.Models
 {
     public static class MoveGenerator
     {
+        public static ulong PseudomoveBitboard(int piece, int[] board)
+        {
+            PieceType pt = Util.GetPieceType(piece);
+            switch (pt)
+            {
+                case PieceType.Pawn:
+                    return PawnMoveGenerator.PseudomoveBitboard(piece, board);
+                case PieceType.Night:
+                    return KnightMoveGenerator.PseudomoveBitboard(piece);
+                case PieceType.Bishop:
+                    return BishopMoveGenerator.PseudomoveBitboard(piece);
+                case PieceType.Rook:
+                    return RookMoveGenerator.PseudomoveBitboard(piece);
+                case PieceType.Queen:
+                    return QueenMoveGenerator.PseudomoveBitboard(piece);
+                case PieceType.King:
+                    return KingMoveGenerator.PseudomoveBitboard(piece);
+                default:
+                    break;
+            }
+
+            return 0;
+        }
         public static List<Move> GenerateMovesForPiece(int piece, int[] board)
         {
             PieceType pt = Util.GetPieceType(piece);
@@ -35,7 +58,6 @@ namespace Chess.Models
                     break;
                 default:
                     break;
-
             }
 
             foreach (int m in temp)

@@ -8,7 +8,43 @@ namespace Chess.Models
 {
     public static class RookMoveGenerator
     {
+        public static ulong PseudomoveBitboard(int piece)
+        {
+            ulong result = 0;
+            int position = Util.GetPieceOffset(piece);
+            int posX = Util.GetXForPosition(position);
+            int posY = Util.GetYForPosition(position);
+            int v;
+            ulong one = 1;
+            //expand out from piece position
+            for (int i = 1; i < 8; i++)
+            {
+                v = (position + (8 * i));//up
+                if (Util.GetXForPosition(v) == posX && Util.GetYForPosition(v) < 8)
+                {
+                    result |= (one << (v));
+                }
 
+                v = (position - (8 * i));//down
+                if (Util.GetXForPosition(v) == posX && Util.GetYForPosition(v) >= 0)
+                {
+                    result |= (one << (v));
+                }
+
+                v = (position + (i));//right
+                if (Util.GetYForPosition(v) == posY && Util.GetXForPosition(v) < 8)
+                {
+                    result |= (one << (v));
+                }
+
+                v = (position - (i));//left
+                if (Util.GetYForPosition(v) == posY && Util.GetXForPosition(v) >= 0)
+                {
+                    result |= (one << (v));
+                }
+            }
+            return result;
+        }
         public static List<int> PossiblePositions(int piece, int[] board)
         {
             bool isWhite = Util.IsWhite(piece);

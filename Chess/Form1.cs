@@ -28,9 +28,9 @@ namespace Chess
             w.Start();
             try
             {
-                //Move bestMove = MinMaxRoot(mainGame.WhiteToMove?(int)numericUpDownWhite.Value: (int)numericUpDownBlack.Value, mainGame, true);
+                Move bestMove = MinMaxRoot(mainGame.WhiteToMove?(int)numericUpDownWhite.Value: (int)numericUpDownBlack.Value, mainGame, true);
 
-                Move bestMove = newRoot(3, mainGame);
+                //Move bestMove = newRoot(3, mainGame);
 
                 bestMove = mainGame.Move(bestMove);
                 string name = Util.GetPieceName(bestMove.From).ToString();
@@ -346,7 +346,7 @@ namespace Chess
                 {
                     num++;
                 }
-                textBox3.Text += move;
+                sb.Append(move);
 
                 turn++;
             }
@@ -354,7 +354,16 @@ namespace Chess
         }
         private void button2_Click(object sender, EventArgs e)
         {
-            MakeMove();
+            try
+            {
+                MakeMove();
+            }
+            catch (StalemateException ex)
+            {
+            }
+            catch (CheckmateException ex)
+            {
+            }
         }
 
         private void button4_Click(object sender, EventArgs e)
