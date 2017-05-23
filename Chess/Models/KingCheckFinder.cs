@@ -8,17 +8,6 @@ namespace Chess.Models
 {
     public static class KingCheckFinder
     {
-        public static bool IsKingChecked(int currentKingPosition, List<Move> enemyMoves)
-        {
-            foreach (Move m in enemyMoves)
-            {
-                if (Util.GetPieceOffset(m.To) == currentKingPosition)
-                {
-                    return true;
-                }
-            }
 
-            return false;
-        }
     }
 }

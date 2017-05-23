@@ -39,6 +39,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.numericUpDownBlack = new System.Windows.Forms.NumericUpDown();
             this.label2 = new System.Windows.Forms.Label();
+            this.button5 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownWhite)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownBlack)).BeginInit();
             this.SuspendLayout();
@@ -102,7 +103,7 @@
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(258, 52);
+            this.button4.Location = new System.Drawing.Point(435, 52);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(75, 23);
             this.button4.TabIndex = 14;
@@ -152,11 +153,22 @@
             this.label2.TabIndex = 18;
             this.label2.Text = "Black Depth";
             // 
+            // button5
+            // 
+            this.button5.Location = new System.Drawing.Point(257, 51);
+            this.button5.Name = "button5";
+            this.button5.Size = new System.Drawing.Size(75, 23);
+            this.button5.TabIndex = 19;
+            this.button5.Text = "Undo";
+            this.button5.UseVisualStyleBackColor = true;
+            this.button5.Click += new System.EventHandler(this.button5_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1012, 626);
+            this.Controls.Add(this.button5);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.numericUpDownBlack);
             this.Controls.Add(this.label1);
@@ -189,6 +201,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.NumericUpDown numericUpDownBlack;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button button5;
     }
 }
 

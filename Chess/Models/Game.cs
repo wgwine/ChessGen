@@ -47,12 +47,17 @@ namespace Chess.Models
 
         double[] blackKingEval = new double[64] { -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -20, -30, -30, -40, -40, -30, -30, -20, -10, -20, -20, -20, -20, -20, -20, -10, 20, 20, 0, 0, 0, 0, 20, 20, 20, 30, 10, 0, 0, 10, 30, 20 };
 
-        private List<int> _positions;
         private int[] _theBoard;
         private bool _whiteOOCastle = true;
         private bool _whiteOOOCastle = true;
         private bool _blackOOCastle = true;
         private bool _blackOOOCastle = true;
+        List<int> whiteOOCastleAttackedSquares = new List<int>() { 5, 6 };
+        List<int> whiteOOOCastleAttackedSquares = new List<int>() { 2, 3 };
+        List<int> blackOOCastleAttackedSquares = new List<int>() { 61, 62 };
+        List<int> blackOOOCastleAttackedSquares = new List<int>() { 58, 59 };
+        List<int> whiteOOOCastleOccupiedSquares = new List<int>() {1, 2, 3 };
+        List<int> blackOOOCastleOccupiedSquares = new List<int>() { 57, 58, 59 };
         private bool _whiteToMove = true;
         private int? enPassantSquare;
         int whiteKing = 0, blackKing = 0, currentKingPiece;
@@ -200,7 +205,7 @@ namespace Chess.Models
             bool kingChecked = false;
             int currentKingPosition;
             int opponentKingPiece;
-            double materialScore = BoardValue();
+            double materialScore = Material();
             if (_whiteToMove)
             {
                 currentKingPiece = whiteKing;
@@ -220,27 +225,78 @@ namespace Chess.Models
             currentKingPosition = Util.GetPieceOffset(currentKingPiece);
 
             Dictionary<int, List<Move>> enemyMovements = new Dictionary<int, List<Models.Move>>();
-            
 
+            List<Move> pieceMoves;
             //see if king is currently in check. If yes and no moves are generated it is checkmate. If no and no moves generated it is stalemate
+            bool allowOOOCastle=true, allowOOCastle=true;
             foreach (int piece in enemyPieces)
             {
-                if (KingCheckFinder.IsKingChecked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
+                pieceMoves = MoveGenerator.GenerateMovesForPiece(piece, _theBoard);
+                if (Util.IsSquareAttacked(currentKingPosition, pieceMoves))
                 {
                     kingChecked = true;
+                }
+                else
+                {
+                    if (_whiteToMove)
+                    {
+                        if(Util.AreSquaresAttacked(whiteOOCastleAttackedSquares, pieceMoves))
+                        {
+                            allowOOCastle = false;
+                        }
+                        if (Util.AreSquaresAttacked(whiteOOOCastleAttackedSquares, pieceMoves))
+                        {
+                            allowOOOCastle = false;
+                        }
+                    }
+                    else
+                    {
+                        if (Util.AreSquaresAttacked(blackOOCastleAttackedSquares, pieceMoves))
+                        {
+                            allowOOCastle = false;
+                        }
+                        if (Util.AreSquaresAttacked(blackOOOCastleAttackedSquares, pieceMoves))
+                        {
+                            allowOOOCastle = false;
+                        }
+                    }
                 }
                 //get all targeted enemy squares without regard for blocking squares. Used to trim check verification step
                 enemyPseudoMoves.Add(MoveGenerator.PseudomoveBitboard(piece, _theBoard));
             }
+            if (!kingChecked)
+            {
+                if (_whiteToMove)
+                {
+                    if (_whiteOOCastle && allowOOCastle && Util.AreSquaresEmpty(whiteOOCastleAttackedSquares, _theBoard))
+                    {
+                        nonCheckingMoves.Add(new Move() { From = whiteKing, To = whiteKing + 2, CastleRookFrom = _theBoard[7], CastleRookTo = _theBoard[7] - 2, removesOO = true });
+                    }
+                    if (_whiteOOOCastle && allowOOOCastle && Util.AreSquaresEmpty(whiteOOOCastleOccupiedSquares, _theBoard))
+                    {
+                        nonCheckingMoves.Add(new Move() { From = whiteKing, To = whiteKing - 2, CastleRookFrom = _theBoard[0], CastleRookTo = _theBoard[0] + 3, removesOOO = true });
+                    }
+                }
+                else
+                {
+                    if (_blackOOCastle && allowOOOCastle && Util.AreSquaresEmpty(blackOOCastleAttackedSquares, _theBoard))
+                    {
+                        nonCheckingMoves.Add(new Move() { From = blackKing, To = blackKing + 2, CastleRookFrom = _theBoard[63], CastleRookTo = _theBoard[63] - 2, removesOO = true });
+                    }
+                    if (_blackOOOCastle && allowOOOCastle && Util.AreSquaresEmpty(blackOOOCastleOccupiedSquares, _theBoard))
+                    {
+                        nonCheckingMoves.Add(new Move() { From = blackKing, To = blackKing - 2, CastleRookFrom = _theBoard[56], CastleRookTo = _theBoard[56] + 3, removesOOO = true });
+                    }
+                }
 
+            }
             //generate legal moves for each of my pieces
             foreach (int piece in myPieces)
             {
                 myGeneratedMoves.AddRange(MoveGenerator.GenerateMovesForPiece(piece, _theBoard));
-            }     
+            }
 
 
-            
             ulong movedKingPositions = KingMoveGenerator.PseudomoveBitboard(currentKingPiece);
             ulong unmovedKingPosition = (one << (currentKingPosition));
             foreach (int piece in _theBoard.Where(e => e > 0 && _whiteToMove != Util.IsWhite(e)))
@@ -278,7 +334,7 @@ namespace Chess.Models
                     foreach (int piece in threateningPieces.Where(e => _theBoard.Contains(e)))
                     {
                         //find out if the move caused the king to be in check
-                        if (KingCheckFinder.IsKingChecked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
+                        if (Util.IsSquareAttacked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
                         {
                             kingFutureChecked = true;
                         }
@@ -288,7 +344,7 @@ namespace Chess.Models
                     foreach (int piece in threateningPiecesNonKingMove.Where(e => _theBoard.Contains(e)))
                     {
                         //find out if the move caused the king to be in check
-                        if (KingCheckFinder.IsKingChecked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
+                        if (Util.IsSquareAttacked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
                         {
                             kingFutureChecked = true;
                         }
@@ -301,7 +357,6 @@ namespace Chess.Models
                     nonCheckingMoves.Add(m);
                 }
             }
-
 
             result.Moves = nonCheckingMoves;
             if (nonCheckingMoves.Count == 0)
@@ -323,7 +378,11 @@ namespace Chess.Models
 
             //remove the moving piece from previous square
             _theBoard[fromOffset] = 0;
-
+            if (m.CastleRookFrom > 0)
+            {
+                _theBoard[Util.GetPieceOffset(m.CastleRookFrom)] = 0;
+                _theBoard[Util.GetPieceOffset(m.CastleRookTo)] = m.CastleRookTo;
+            }
             if (currentToPiece > 0 && Util.IsWhite(currentToPiece) != isWhiteMoving)
             {
                 //check for captures and then record in history item, allows for undo
@@ -335,21 +394,43 @@ namespace Chess.Models
             //maintain the kings on move so they dont need to be looked up during move generation
             if (Util.IsKing(m.To))
             {
-                if (_whiteToMove)
+                if (m.CastleRookFrom > 0)
                 {
-                    whiteKing = m.To;
-                    _whiteOOCastle = false;
-                    _whiteOOOCastle = false;
+                    if (_whiteToMove)
+                    {
+                        if (m.removesOO)
+                            _whiteOOCastle = false;
+                        if (m.removesOOO)
+                            _whiteOOOCastle = false;
+                    }
+                    else
+                    {
+                        if (m.removesOO)
+                            _blackOOCastle = false;
+                        if (m.removesOOO)
+                            _blackOOOCastle = false;
+                    }
+                    m.removesOOO = true;
                 }
                 else
                 {
-                    blackKing = m.To;
-                    _blackOOCastle = false;
-                    _blackOOOCastle = false;
+                    if (_whiteToMove)
+                    {
+                        whiteKing = m.To;
+                        _whiteOOCastle = false;
+                        _whiteOOOCastle = false;
+                    }
+                    else
+                    {
+                        blackKing = m.To;
+                        _blackOOCastle = false;
+                        _blackOOOCastle = false;
+                    }
+                    m.removesOO = true;
+                    m.removesOOO = true;
                 }
-                m.removesOO = true;
-                m.removesOOO = true;
             }
+
 
             _whiteToMove = !_whiteToMove;
             history.Push(m);
@@ -369,26 +450,45 @@ namespace Chess.Models
         {
             if (history.Count > 0)
             {
-                Move move = history.Pop();
-                int fromOffset = Util.GetPieceOffset(move.From);
-                int toOffset = Util.GetPieceOffset(move.To);
+                Move m = history.Pop();
+                int fromOffset = Util.GetPieceOffset(m.From);
+                int toOffset = Util.GetPieceOffset(m.To);
 
                 //move the piece back to its previous position, which should always be 0
-                _theBoard[fromOffset] = move.From;
-                //set the king reference back to previous value
-                if (Util.IsKing(move.From))
+                _theBoard[fromOffset] = m.From;
+
+                if (m.CastleRookFrom > 0)
                 {
-                    if (Util.IsWhite(move.From))
-                        whiteKing = move.From;
+                    _theBoard[Util.GetPieceOffset(m.CastleRookFrom)] = m.CastleRookFrom;
+                    _theBoard[Util.GetPieceOffset(m.CastleRookTo)] = 0;
+                    if (_whiteToMove)
+                    {
+                        if (m.removesOO)
+                            _blackOOCastle=true;
+                        if (m.removesOOO)
+                            _blackOOOCastle = true;
+                    }else
+                    {
+                        if (m.removesOO)
+                            _whiteOOCastle = true;
+                        if (m.removesOOO)
+                            _whiteOOOCastle = true;
+                    }
+                }
+                //set the king reference back to previous value
+                if (Util.IsKing(m.From))
+                {
+                    if (Util.IsWhite(m.From))
+                        whiteKing = m.From;
                     else
-                        blackKing = move.From;
+                        blackKing = m.From;
                 }
                 //clear the square it had moved into
                 _theBoard[toOffset] = 0;
                 //and put back the piece it captured if any
-                if (move.Captured.HasValue)
+                if (m.Captured.HasValue)
                 {
-                    _theBoard[toOffset] = move.Captured.Value;
+                    _theBoard[toOffset] = m.Captured.Value;
                 }
                 _whiteToMove = !_whiteToMove;
             }

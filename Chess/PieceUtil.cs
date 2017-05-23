@@ -102,5 +102,38 @@ namespace Chess
         {
             return (piece & (1 << pos)) != 0;
         }
+        public static bool IsSquareAttacked(int squarePosition, List<Move> enemyMoves)
+        {
+            foreach (Move m in enemyMoves)
+            {
+                if (GetPieceOffset(m.To) == squarePosition)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public static bool AreSquaresAttacked(List<int> squarePositions, List<Move> enemyMoves)
+        {
+            foreach (Move m in enemyMoves)
+            {
+                if (squarePositions.Contains(GetPieceOffset(m.To)))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public static bool AreSquaresEmpty(List<int> squarePositions, int[] _board)
+        {
+            foreach (int m in squarePositions)
+            {
+                if (_board[m]>0)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
     }  
 }

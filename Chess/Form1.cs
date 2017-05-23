@@ -20,7 +20,16 @@ namespace Chess
             InitializeComponent();
 
         }
-
+        public void Undo()
+        {
+            mainGame.Undo();
+            sb.Append(mainGame.ToString());
+            sb.Append("\r\n\r\n");
+            sb.Append(mainGame.ToFENString());
+            sb.Append("\r\n\r\n");
+            textBox3.AppendText(sb.ToString());
+            sb.Clear();
+        }
         public void MakeMove()
         {
             double initialValue = mainGame.BoardValue();
@@ -389,6 +398,11 @@ namespace Chess
                     i = m;
                 }
             }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            Undo();
         }
     }
 }
