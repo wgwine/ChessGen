@@ -18,6 +18,12 @@ namespace Chess
         public Form1()
         {
             InitializeComponent();
+            textBox3.Text = "";
+            string value = textBox2.Text;
+            mainGame = new Game(value);
+            sb.Append(mainGame.ToString());
+            sb.Append("\r\n\r\n");
+            textBox3.AppendText(sb.ToString());
 
         }
         public void Undo()
@@ -37,9 +43,9 @@ namespace Chess
             w.Start();
             try
             {
-                Move bestMove = MinMaxRoot(mainGame.WhiteToMove?(int)numericUpDownWhite.Value: (int)numericUpDownBlack.Value, mainGame, true);
+                Move bestMove = MinMaxRoot(mainGame.WhiteToMove ? (int)numericUpDownWhite.Value : (int)numericUpDownBlack.Value, mainGame, true);
 
-               //Move bestMove = newRoot(3, mainGame);
+                //Move bestMove = newRoot(3, mainGame);
 
                 bestMove = mainGame.Move(bestMove);
                 string name = Util.GetPieceName(bestMove.From).ToString();
@@ -75,11 +81,9 @@ namespace Chess
         {
             textBox3.Text = "";
             string value = textBox2.Text;
-            Game g;
-            g = new Game(value);
-            sb.Append(g.ToString());
+            mainGame = new Game(value);
+            sb.Append(mainGame.ToString());
             sb.Append("\r\n\r\n");
-            mainGame = g;
             textBox3.AppendText(sb.ToString());
         }
 
@@ -168,7 +172,8 @@ namespace Chess
                     {
                         bestMove = move.MaterialScore;
                         theMove = move;
-                    }else if (nextMove.MaterialScore < bestMove)
+                    }
+                    else if (nextMove.MaterialScore < bestMove)
                     {
                         g.Undo();
                         break;
@@ -179,7 +184,6 @@ namespace Chess
             }
             else
             {
-
                 double bestMove = 99999;
 
                 foreach (Move move in result.Moves)
@@ -197,15 +201,12 @@ namespace Chess
                         break;
                     }
                     g.Undo();
-
                 }
-
                 return theMove;
             }
         }
         public Move MinMaxRoot(int depth, Game g, bool IsMaximizingPlayer)
         {
-
             MoveGenerationResult result = g.GetMoves();
 
             count += result.Moves.Count;
@@ -218,7 +219,7 @@ namespace Chess
                 throw new StalemateException();
             }
 
-            double bestMove = -999999 *(g.WhiteToMove?1:-1);
+            double bestMove = -999999 * (g.WhiteToMove ? 1 : -1);
             Random r = new Random();
             Move bestMoveFound = result.Moves[r.Next(result.Moves.Count - 1)];
 
@@ -229,7 +230,7 @@ namespace Chess
             Parallel.ForEach(result.Moves, (move) =>
             {
                 Game g2 = new Game(FENFEN);
-                move=g2.Move(move);
+                move = g2.Move(move);
                 try
                 {
                     double value = MiniMax(depth - 1, g2, -1000000, 1000000, !IsMaximizingPlayer, move.To);
@@ -267,7 +268,6 @@ namespace Chess
                 return g.BoardValue();
             }
 
-
             MoveGenerationResult result = g.GetMoves();
             if (result.Endgame == EndgameType.Checkmate)
             {
@@ -275,6 +275,13 @@ namespace Chess
                     return -10000000;
                 else
                     return 10000000;
+            }
+            if (result.Endgame == EndgameType.Stalemate)
+            {
+                if (g.WhiteToMove)
+                    return 10000000;
+                else
+                    return -10000000;
             }
             count += result.Moves.Count;
 
@@ -288,7 +295,7 @@ namespace Chess
                     g.Move(move);
                     bestMove = Math.Max(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer, move.To));
                     g.Undo();
-                    
+
                     alpha = Math.Max(alpha, bestMove);
                     if (beta <= alpha)
                     {
@@ -303,10 +310,10 @@ namespace Chess
                 foreach (Move move in result.Moves)
                 {
 
-                        g.Move(move);
-                        bestMove = Math.Min(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer, move.To));
-                        g.Undo();
-                    
+                    g.Move(move);
+                    bestMove = Math.Min(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer, move.To));
+                    g.Undo();
+
                     beta = Math.Min(beta, bestMove);
                     if (beta <= alpha)
                     {
@@ -320,19 +327,6 @@ namespace Chess
 
         private void button1_Click(object sender, EventArgs e)
         {
-            //mainGame.Undo();
-            //MoveGenerationResult result = mainGame.GetMoves();
-            //StringBuilder sb = new StringBuilder();
-            //foreach(Move m in result.Moves)
-            //{
-            //    string name = Util.GetPieceName(m.From).ToString();
-            //    string fileTo = Util.IntToFile(Util.GetXForPiece(m.To)).ToString();
-            //    string rankTo = (Util.GetYForPiece(m.To) + 1).ToString();
-            //    string move = string.Format("{2} From:{0}, To:{1}({3},{4})\r\n", m.From, m.To, name, fileTo, rankTo);
-            //    sb.Append(move);
-            //}
-
-            //textBox3.Text += sb.ToString();
             PrintPGN();
         }
         public void PrintPGN()
@@ -351,13 +345,13 @@ namespace Chess
                 name += fileFrom + rankFrom;
                 string numStr = turn % 2 == 0 ? "\r\n" + num.ToString() + ". " : " ";
                 string move = string.Format("{0}{1}{2}{3}{4} ", numStr, name, cap, fileTo, rankTo);
-                if (m.removesOO && m.CastleRookFrom>0)
+                if (m.removesOO && m.CastleRookFrom > 0)
                 {
                     move = numStr + " O-O";
                 }
                 if (m.removesOOO && m.CastleRookFrom > 0)
                 {
-                    move = numStr+" O-O-O";
+                    move = numStr + " O-O-O";
                 }
                 if (turn % 2 == 0)
                 {
@@ -368,6 +362,11 @@ namespace Chess
                 turn++;
             }
             textBox3.AppendText(sb.ToString());
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            Undo();
         }
         private void button2_Click(object sender, EventArgs e)
         {
@@ -403,9 +402,5 @@ namespace Chess
             }
         }
 
-        private void button5_Click(object sender, EventArgs e)
-        {
-            Undo();
-        }
     }
 }

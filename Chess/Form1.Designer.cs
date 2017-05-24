@@ -58,7 +58,7 @@
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(75, 23);
             this.button3.TabIndex = 9;
-            this.button3.Text = "LOAD";
+            this.button3.Text = "Reset Board";
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
@@ -114,6 +114,11 @@
             // numericUpDownWhite
             // 
             this.numericUpDownWhite.Location = new System.Drawing.Point(598, 25);
+            this.numericUpDownWhite.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             this.numericUpDownWhite.Name = "numericUpDownWhite";
             this.numericUpDownWhite.Size = new System.Drawing.Size(120, 20);
             this.numericUpDownWhite.TabIndex = 15;
@@ -135,6 +140,11 @@
             // numericUpDownBlack
             // 
             this.numericUpDownBlack.Location = new System.Drawing.Point(725, 25);
+            this.numericUpDownBlack.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             this.numericUpDownBlack.Name = "numericUpDownBlack";
             this.numericUpDownBlack.Size = new System.Drawing.Size(120, 20);
             this.numericUpDownBlack.TabIndex = 17;

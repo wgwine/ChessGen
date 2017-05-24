@@ -61,13 +61,12 @@
     <Compile Include="Models\PawnMoveGenerator.cs" />
     <Compile Include="Models\BishopMoveGenerator.cs" />
     <Compile Include="Models\Game.cs" />
-    <Compile Include="Models\GamePiece.cs" />
     <Compile Include="Models\PieceTypeFENMap.cs" />
     <Compile Include="Models\QueenMoveGenerator.cs" />
     <Compile Include="Models\KingMoveGenerator.cs" />
     <Compile Include="Models\KnightMoveGenerator.cs" />
     <Compile Include="Models\RookMoveGenerator.cs" />
-    <Compile Include="Models\StalemateException.cs" />
+    <Compile Include="Models\Exceptions.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
