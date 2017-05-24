@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using Chess.Utilities;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Chess.Models
 {
@@ -77,12 +74,26 @@ namespace Chess.Models
         List<int> whiteOOOCastleOccupiedSquares = new List<int>() {1, 2, 3 };
         List<int> blackOOOCastleOccupiedSquares = new List<int>() { 57, 58, 59 };
         private bool _whiteToMove = true;
-        private int? enPassantSquare;
+        private int? _enPassantSquare;
         int whiteKing = 0, blackKing = 0, currentKingPiece;
         public Stack<Move> history;
         Dictionary<int, List<Move>> nextMoves = new Dictionary<int, List<Move>>();
         List<Move> actualNextMoves = new List<Move>();
         ulong one = 1;
+        public int? EnPassantSquare
+        {
+            get
+            {
+                return _enPassantSquare;
+            }
+        }
+        public int[] Board
+        {
+            get
+            {
+                return _theBoard;
+            }
+        }
         public bool WhiteOOCastle
         {
             get
@@ -194,7 +205,7 @@ namespace Chess.Models
             {
                 //file + (8 * rank)
                 //ascii offset -'1' instead of -'0' because FEN is 1 indexed instead of 0 indexed
-                enPassantSquare = (Util.FileToInt(fenParts[3][0]) + (8 * (fenParts[3][1] - '1')));
+                _enPassantSquare = (Util.FileToInt(fenParts[3][0]) + (8 * (fenParts[3][1] - '1')));
             }
             foreach (int p in _theBoard)
             {
@@ -626,146 +637,11 @@ namespace Chess.Models
         }
         public string ToFENString()
         {
-            string result = "";
-
-            string[] resultArr = new string[8 * 8];
-            foreach (int piece in _theBoard.Where(e => e > 0))
-            {
-                resultArr[Util.GetPieceOffset(piece)] = PieceTypeFENMap.PieceName(piece).ToString();
-            }
-            int count = 0;
-            StringBuilder sb = new StringBuilder();
-            StringBuilder sbRow = new StringBuilder();
-            //we have to re-reverse the result for text-box
-            int skipGrabber = 0;
-            foreach (string p in resultArr.Reverse())
-            {
-                if (count % 8 == 0 && count > 0)
-                {
-                    sb.Append("/");
-                }
-                if (p != null)
-                {
-                    if (skipGrabber != 0)
-                    {
-                        sbRow.Append(skipGrabber);
-                        skipGrabber = 0;
-                    }
-                    sbRow.Append(p);
-                }
-                else
-                {
-                    skipGrabber++;
-                }
-
-                count++;
-                if (count % 8 == 0)
-                {
-                    if (skipGrabber != 0)
-                    {
-                        sbRow.Append(skipGrabber);
-                        skipGrabber = 0;
-                    }
-                }
-                if (count % 8 == 0)
-                {
-                    string ss = new string(sbRow.ToString().Reverse().ToArray());
-                    sb.Append(ss);
-                    sbRow.Clear();
-                }
-            }
-
-            //which player has next move
-            sb.Append(" ");
-            if (_whiteToMove)
-            {
-                sb.Append("w");
-            }
-            else
-            {
-                sb.Append("b");
-            }
-
-            //castling
-            sb.Append(" ");
-            if (_whiteOOCastle || _whiteOOOCastle || _blackOOCastle || _blackOOOCastle)
-            {
-                if (_whiteOOCastle)
-                {
-                    sb.Append("K");
-                }
-                if (_whiteOOOCastle)
-                {
-                    sb.Append("Q");
-                }
-                if (_blackOOCastle)
-                {
-                    sb.Append("k");
-                }
-                if (_blackOOOCastle)
-                {
-                    sb.Append("q");
-                }
-            }
-            else
-            {
-                sb.Append("-");
-            }
-
-
-            if (enPassantSquare.HasValue)
-            {
-                sb.Append(" ");
-                sb.Append(Util.IntToFile(Util.GetXForPosition((byte)enPassantSquare.Value)));
-                sb.Append(Util.GetYForPosition((byte)enPassantSquare.Value) + 1);
-            }
-            else
-            {
-                sb.Append(" -");
-            }
-            return sb.ToString();
+            return GameUtility.GameToFEN(this);
         }
         public override string ToString()
         {
-            char[][] resultArr = new char[8][];
-            for (int i = 0; i < 8; i++)
-            {
-                resultArr[i] = new char[8];
-            }
-
-            int rowCount = 0;
-            int rowIndex = 0;
-            foreach (int piece in _theBoard.Where(e => e > 0))
-            {
-
-
-                resultArr[Util.GetYForPiece(piece)][Util.GetXForPiece(piece)] = PieceTypeFENMap.PieceName(piece);
-                rowCount++;
-                if (rowCount % 8 == 0)
-                {
-                    rowIndex++;
-                }
-
-            }
-            int count = 0;
-            StringBuilder sb = new StringBuilder();
-            //we have to re-reverse the result for text-box
-            char[] rowText = new char[8];
-            resultArr = resultArr.Reverse().ToArray();
-            for (int i = 0; i < 8; i++)
-            {
-                foreach (char p in resultArr[i])
-                {
-                    rowText[count % 8] = p == 0 ? '-' : p;
-                    count++;
-                    if (count % 8 == 0)
-                    {
-                        sb.Append(rowText);
-                        sb.Append("\r\n");
-                    }
-                }
-            }
-            return sb.ToString();
+            return GameUtility.GameToString(this);
         }
 
     }
