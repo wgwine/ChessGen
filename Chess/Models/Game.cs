@@ -223,7 +223,7 @@ namespace Chess.Models
             bool kingChecked = false;
             int currentKingPosition;
             int opponentKingPiece;
-            double materialScore = BoardValue();
+            double materialScore = Material();
             if (_whiteToMove)
             {
                 currentKingPiece = whiteKing;
@@ -412,41 +412,48 @@ namespace Chess.Models
             //maintain the kings on move so they dont need to be looked up during move generation
             if (Util.IsKing(m.To))
             {
-                if (m.CastleRookFrom > 0)
+                if (_whiteToMove)
                 {
-                    if (_whiteToMove)
-                    {
-                        if (m.removesOO)
-                            _whiteOOCastle = false;
-                        if (m.removesOOO)
-                            _whiteOOOCastle = false;
-                    }
-                    else
-                    {
-                        if (m.removesOO)
-                            _blackOOCastle = false;
-                        if (m.removesOOO)
-                            _blackOOOCastle = false;
-                    }
-                    m.removesOOO = true;
+                    whiteKing = m.To;
+                    if (_whiteOOCastle)
+                        m.removesOO = true;
+                    if (_whiteOOOCastle)
+                        m.removesOOO = true;
+
+                    _whiteOOCastle = false;
+                    _whiteOOOCastle = false;
                 }
                 else
                 {
-                    if (_whiteToMove)
-                    {
-                        whiteKing = m.To;
-                        _whiteOOCastle = false;
-                        _whiteOOOCastle = false;
-                    }
-                    else
-                    {
-                        blackKing = m.To;
-                        _blackOOCastle = false;
-                        _blackOOOCastle = false;
-                    }
-                    m.removesOO = true;
-                    m.removesOOO = true;
+                    blackKing = m.To;
+                    if (_blackOOCastle)
+                        m.removesOO = true;
+                    if (_blackOOOCastle)
+                        m.removesOOO = true;
+                    _blackOOCastle = false;
+                    _blackOOOCastle = false;
                 }
+            }
+            
+            if (m.From==704)
+            {
+                m.removesOOO = true;
+                _whiteOOOCastle = false;
+            }
+            if (m.From == 711)
+            {
+                m.removesOO = true;
+                _whiteOOCastle = false;
+            }
+            if (m.From == 248)
+            {
+                m.removesOOO = true;
+                _blackOOOCastle = false;
+            }
+            if (m.From == 255)
+            {
+                m.removesOO = true;
+                _blackOOCastle = false;
             }
 
 
@@ -479,19 +486,20 @@ namespace Chess.Models
                 {
                     _theBoard[Util.GetPieceOffset(m.CastleRookFrom)] = m.CastleRookFrom;
                     _theBoard[Util.GetPieceOffset(m.CastleRookTo)] = 0;
-                    if (_whiteToMove)
-                    {
-                        if (m.removesOO)
-                            _blackOOCastle=true;
-                        if (m.removesOOO)
-                            _blackOOOCastle = true;
-                    }else
-                    {
-                        if (m.removesOO)
-                            _whiteOOCastle = true;
-                        if (m.removesOOO)
-                            _whiteOOOCastle = true;
-                    }
+                }
+                if (_whiteToMove)
+                {
+                    if (m.removesOO)
+                        _blackOOCastle = true;
+                    if (m.removesOOO)
+                        _blackOOOCastle = true;
+                }
+                else
+                {
+                    if (m.removesOO)
+                        _whiteOOCastle = true;
+                    if (m.removesOOO)
+                        _whiteOOOCastle = true;
                 }
                 //set the king reference back to previous value
                 if (Util.IsKing(m.From))
