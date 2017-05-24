@@ -99,7 +99,7 @@ namespace Chess
             }
             Move bestMoveFound = result.Moves[r.Next(result.Moves.Count - 1)];
 
-            double bestMove = g.WhiteToMove ? -99999 : 99999;
+            double bestMove = g.WhiteToMove ? -999999 : 999999;
 
             string FENFEN = g.ToFENString();
 
@@ -218,7 +218,7 @@ namespace Chess
                 throw new StalemateException();
             }
 
-            double bestMove = -99999;
+            double bestMove = -999999;
             Random r = new Random();
             Move bestMoveFound = result.Moves[r.Next(result.Moves.Count - 1)];
 
@@ -232,7 +232,7 @@ namespace Chess
                 g2.Move(move);
                 try
                 {
-                    double value = MiniMax(depth - 1, g2, -100000, 100000, !IsMaximizingPlayer, move.To);
+                    double value = MiniMax(depth - 1, g2, -1000000, 1000000, !IsMaximizingPlayer, move.To);
                     resultVal.Add(new Tuple<Move, double>(move, value));
                 }
                 catch (Exception w)
@@ -264,7 +264,7 @@ namespace Chess
         {
             if (depth == 0)
             {
-                return g.Material() * (g.WhiteToMove ? -1 : 1);
+                return g.Material() ;
             }
 
 
@@ -274,20 +274,15 @@ namespace Chess
             if (IsMaximizingPlayer)
             {
                 int multi = g.WhiteToMove ? 1 : -1;
-                double bestMove = -99999;
+                double bestMove = -999999;
 
                 foreach (Move move in result.Moves)
                 {
-                    if (depth == 1)
-                    {
-                        bestMove = Math.Max(bestMove, multi * move.MaterialScore);
-                    }
-                    else
-                    {
+
                         g.Move(move);
                         bestMove = Math.Max(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer, move.To));
                         g.Undo();
-                    }
+                    
                     alpha = Math.Max(alpha, bestMove);
                     if (beta <= alpha)
                     {
@@ -299,19 +294,14 @@ namespace Chess
             else
             {
                 int multi = g.WhiteToMove ? 1 : -1;
-                double bestMove = 99999;
+                double bestMove = 999999;
                 foreach (Move move in result.Moves)
                 {
-                    if (depth == 1)
-                    {
-                        bestMove = Math.Min(bestMove, multi * move.MaterialScore);
-                    }
-                    else
-                    {
+
                         g.Move(move);
                         bestMove = Math.Min(bestMove, MiniMax(depth - 1, g, alpha, beta, !IsMaximizingPlayer, move.To));
                         g.Undo();
-                    }
+                    
                     beta = Math.Min(beta, bestMove);
                     if (beta <= alpha)
                     {
