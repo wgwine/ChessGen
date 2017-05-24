@@ -180,5 +180,64 @@ namespace Chess.Models
             }
             return result;
         }
+        public static ulong PossiblePositionsBitboard(int piece, int[] board)
+        {
+            bool isWhite = Util.IsWhite(piece);
+            ulong result = 0;
+            ulong one = 1;
+            int position = Util.GetPieceOffset(piece);
+            int positionX = Util.GetXForPosition(position);
+            int positionY = Util.GetYForPosition(position);
+            if (isWhite)
+            {
+                if (positionY < 7)
+                {
+                    if (board[position + 8] == 0)
+                    {
+                        result |= (one << (position + 8));
+                    }
+                    //captures
+                    if (positionX > 0 && board[position + 7] > 0 && Util.IsWhite(board[position + 7]) != isWhite)
+                    {
+                        result |= (one << (position + 7));
+                    }
+
+                    if (positionX < 7 && board[position + 9] > 0 && Util.IsWhite(board[position + 9]) != isWhite)
+                    {
+                        result |= (one << (position + 9));
+                    }
+
+
+                    if (positionY == 1)
+                    {
+                        if (board[position + 8] == 0 && board[position + (2 * 8)] == 0)
+                        {
+                            result |= (one << (position + (2 * 8)));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (positionY > 0)
+                {
+                    if (board[position - 8] == 0)
+                        result |= (one << (position - 8));
+
+                    if (positionX < 7 && board[position - 7] > 0 && Util.IsWhite(board[position - 7]) != isWhite)
+                        result |= (one << (position - 7));
+
+                    if (positionX > 0 && board[position - 9] > 0 && Util.IsWhite(board[position - 9]) != isWhite)
+                        result |= (one << (position - 9));
+
+                    if (positionY == 6)
+                    {
+                        if (board[position - 8] == 0 && board[position - (2 * 8)] == 0)
+                            result |= (one << (position - (2 * 8)));
+                    }
+                }
+            }
+            return result;
+        }
     }
 }

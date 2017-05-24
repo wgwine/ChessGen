@@ -8,53 +8,7 @@ namespace Chess.Models
 {
     public static class BishopMoveGenerator
     {
-        public static ulong PseudomoveBitboard(int piece)
-        {
-            ulong result = 0;
-            int position = Util.GetPieceOffset(piece);
-            int posX = Util.GetXForPosition(position);
-            int posY = Util.GetYForPosition(position);
-            int x, y, v;
-            ulong one = 1;
-            //expand out from piece position
 
-            for (int i = 1; i < 8; i++)
-            {
-                v = (position + (9 * i));//up right
-                x = Util.GetXForPosition(v);
-                y = Util.GetYForPosition(v);
-                //prevent wrapping
-                if (x > posX && x < 8 && y < 8)
-                {
-                    result |= (one << (v));
-                }
-
-                v = (position - (9 * i));//down left
-                x = Util.GetXForPosition(v);
-                y = Util.GetYForPosition(v);
-                if (x < posX && x >= 0 && y >= 0)
-                {
-                    result |= (one << (v));
-                }
-
-                v = (position + (7 * i));//up left
-                x = Util.GetXForPosition(v);
-                y = Util.GetYForPosition(v);
-                if (x < posX && x >= 0 && y < 8)
-                {
-                    result |= (one << (v));
-                }
-
-                v = (position - (7 * i));//down right
-                x = Util.GetXForPosition(v);
-                y = Util.GetYForPosition(v);
-                if (x > posX && x < 8 && y >= 0)
-                {
-                    result |= (one << (v));
-                }
-            }
-            return result;
-        }
         public static List<int> PossiblePositions(int piece, int[] board)
         {
             bool isWhite = Util.IsWhite(piece);
@@ -148,6 +102,145 @@ namespace Chess.Models
 
 
 
+            return result;
+        }
+        public static ulong PossiblePositionsBitboard(int piece, int[] board)
+        {
+            bool isWhite = Util.IsWhite(piece);
+            ulong result = 0;
+            int position = Util.GetPieceOffset(piece);
+            int unpositionedPiece = Util.DepositionPiece(piece);
+            int posX = Util.GetXForPosition(position);
+            bool stopA = false, stopB = false, stopC = false, stopD = false;
+            int x, y, v;
+            ulong one = 1;
+            for (int i = 1; i < 8; i++)
+            {
+                if (!stopA)
+                {
+                    v = (position + (9 * i));//up right
+                    x = Util.GetXForPosition(v);
+                    y = Util.GetYForPosition(v);
+                    //prevent wrapping
+                    if (x > posX && x < 8 && y < 8)
+                    {
+                        if (board[v] > 0)
+                        {
+                            stopA = true;
+                            if (Util.IsWhite(board[v]) != isWhite)
+                                result |= (one << (v));
+                        }
+                        else
+                        {
+                            result |= (one << (v));
+                        }
+                    }
+                }
+                if (!stopB)
+                {
+                    v = (position - (9 * i));//down left
+                    x = Util.GetXForPosition(v);
+                    y = Util.GetYForPosition(v);
+                    if (x < posX && x >= 0 && y >= 0)
+                    {
+                        if (board[v] > 0)
+                        {
+                            stopB = true;
+                            if (Util.IsWhite(board[v]) != isWhite)
+                                result |= (one << (v));
+                        }
+                        else
+                        {
+                            result |= (one << (v));
+                        }
+                    }
+                }
+                if (!stopC)
+                {
+                    v = (position + (7 * i));//up left
+                    x = Util.GetXForPosition(v);
+                    y = Util.GetYForPosition(v);
+                    if (x < posX && x >= 0 && y < 8)
+                    {
+                        if (board[v] > 0)
+                        {
+                            stopC = true;
+                            if (Util.IsWhite(board[v]) != isWhite)
+                                result |= (one << (v));
+                        }
+                        else
+                        {
+                            result |= (one << (v));
+                        }
+                    }
+                }
+
+                if (!stopD)
+                {
+                    v = (position - (7 * i));//down right
+                    x = Util.GetXForPosition(v);
+                    if (x > posX && x < 8 && Util.GetYForPosition(v) >= 0)
+                    {
+                        if (board[v] > 0)
+                        {
+                            stopD = true;
+                            if (Util.IsWhite(board[v]) != isWhite)
+                                result |= (one << (v));
+                        }
+                        else
+                        {
+                            result |= (one << (v));
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+        public static ulong PseudomoveBitboard(int piece)
+        {
+            ulong result = 0;
+            int position = Util.GetPieceOffset(piece);
+            int posX = Util.GetXForPosition(position);
+            int posY = Util.GetYForPosition(position);
+            int x, y, v;
+            ulong one = 1;
+            //expand out from piece position
+
+            for (int i = 1; i < 8; i++)
+            {
+                v = (position + (9 * i));//up right
+                x = Util.GetXForPosition(v);
+                y = Util.GetYForPosition(v);
+                //prevent wrapping
+                if (x > posX && x < 8 && y < 8)
+                {
+                    result |= (one << (v));
+                }
+
+                v = (position - (9 * i));//down left
+                x = Util.GetXForPosition(v);
+                y = Util.GetYForPosition(v);
+                if (x < posX && x >= 0 && y >= 0)
+                {
+                    result |= (one << (v));
+                }
+
+                v = (position + (7 * i));//up left
+                x = Util.GetXForPosition(v);
+                y = Util.GetYForPosition(v);
+                if (x < posX && x >= 0 && y < 8)
+                {
+                    result |= (one << (v));
+                }
+
+                v = (position - (7 * i));//down right
+                x = Util.GetXForPosition(v);
+                y = Util.GetYForPosition(v);
+                if (x > posX && x < 8 && y >= 0)
+                {
+                    result |= (one << (v));
+                }
+            }
             return result;
         }
     }

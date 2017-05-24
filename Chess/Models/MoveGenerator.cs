@@ -66,5 +66,27 @@ namespace Chess.Models
             }
             return result;
         }
+        public static ulong GenerateMovesForPieceBitboard(int piece, int[] board)
+        {
+            PieceType pt = Util.GetPieceType(piece);
+            switch (pt)
+            {
+                case PieceType.Pawn:
+                    return PawnMoveGenerator.PossiblePositionsBitboard(piece, board);
+                case PieceType.Night:
+                    return KnightMoveGenerator.PossiblePositionsBitboard(piece, board);
+                case PieceType.Bishop:
+                    return BishopMoveGenerator.PossiblePositionsBitboard(piece, board);
+                case PieceType.Rook:
+                    return RookMoveGenerator.PossiblePositionsBitboard(piece, board);
+                case PieceType.Queen:
+                    return QueenMoveGenerator.PossiblePositionsBitboard(piece, board);
+                case PieceType.King:
+                    return KingMoveGenerator.PossiblePositionsBitboard(piece, board);
+                default:
+                    break;
+            }
+            return 0;
+        }
     }
 }

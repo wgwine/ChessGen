@@ -15,5 +15,9 @@ namespace Chess.Models
             result.AddRange(RookMoveGenerator.PossiblePositions(piece, board));
             return result;
         }
+        public static ulong PossiblePositionsBitboard(int piece, int[] board)
+        {
+            return BishopMoveGenerator.PossiblePositionsBitboard(piece, board) | RookMoveGenerator.PossiblePositionsBitboard(piece, board);
+        }
     }
 }

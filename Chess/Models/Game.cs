@@ -308,10 +308,12 @@ namespace Chess.Models
                 }
 
             }
+
             //generate legal moves for each of my pieces
             foreach (int piece in myPieces)
             {
                 myGeneratedMoves.AddRange(MoveGenerator.GenerateMovesForPiece(piece, _theBoard));
+               
             }
 
 
@@ -352,7 +354,7 @@ namespace Chess.Models
                     foreach (int piece in threateningPieces.Where(e => _theBoard.Contains(e)))
                     {
                         //find out if the move caused the king to be in check
-                        if (Util.IsSquareAttacked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
+                        if (((one << (currentKingPosition)) & MoveGenerator.GenerateMovesForPieceBitboard(piece, _theBoard)) > 0)
                         {
                             kingFutureChecked = true;
                         }
@@ -362,7 +364,7 @@ namespace Chess.Models
                     foreach (int piece in threateningPiecesNonKingMove.Where(e => _theBoard.Contains(e)))
                     {
                         //find out if the move caused the king to be in check
-                        if (Util.IsSquareAttacked(currentKingPosition, MoveGenerator.GenerateMovesForPiece(piece, _theBoard)))
+                        if (((one << (currentKingPosition)) & MoveGenerator.GenerateMovesForPieceBitboard(piece, _theBoard))>0)
                         {
                             kingFutureChecked = true;
                         }
