@@ -1,4 +1,6 @@
-﻿using Chess.Utilities;
+﻿using Alea;
+using Alea.Parallel;
+using Chess.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -134,11 +136,12 @@ namespace Chess.Models
         {
             history = new Stack<Move>();
         }
+        Gpu gpu;
         public Game(string fen)
         {
             _theBoard = new int[64];
             history = new Stack<Move>();
-
+            gpu = Gpu.Default;
             //split the sections of the FEN string with spaces
             string[] fenParts = fen.Trim().Split(' ');
 
@@ -362,24 +365,26 @@ namespace Chess.Models
                 currentKingPosition = Util.GetPieceOffset(currentKingPiece);
                 if (Util.IsKing(m.From))
                 {
-                    foreach (int piece in threateningPieces.Where(e => _theBoard.Contains(e)))
+                    var gpu = Gpu.Default;
+                    int[] n = threateningPieces.Where(e => _theBoard.Contains(e)).ToArray();
+                    gpu.For(0, n.Count(), i =>
                     {
-                        //find out if the move caused the king to be in check
-                        if (((one << (currentKingPosition)) & MoveGenerator.GenerateMovesForPieceBitboard(piece, _theBoard)) > 0)
+                        if (((one << (currentKingPosition)) & MoveGenerator.GenerateMovesForPieceBitboard(n[i], _theBoard)) > 0)
                         {
                             kingFutureChecked = true;
                         }
-                    }
+                    });
                 }else
                 {
-                    foreach (int piece in threateningPiecesNonKingMove.Where(e => _theBoard.Contains(e)))
+
+                    int[] n = threateningPiecesNonKingMove.Where(e => _theBoard.Contains(e)).ToArray();
+                    gpu.For(0, n.Count(), i =>
                     {
-                        //find out if the move caused the king to be in check
-                        if (((one << (currentKingPosition)) & MoveGenerator.GenerateMovesForPieceBitboard(piece, _theBoard))>0)
+                        if (((one << (currentKingPosition)) & MoveGenerator.GenerateMovesForPieceBitboard(n[i], _theBoard)) > 0)
                         {
                             kingFutureChecked = true;
                         }
-                    }
+                    });
                 }
 
                 Undo();
