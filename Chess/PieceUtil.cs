@@ -62,9 +62,7 @@ namespace Chess
         }
         public static PieceType GetPieceType(int piece)
         {
-            int a = piece % 512;
-            a = (a >> 6);
-            return (PieceType)a;
+            return (PieceType)((piece % 512) >> 6);
         }
 
         //first 3 bits are for piece type, but that is 8 values and we only have 6 pieces. Fill in the blanks with some character. 
